@@ -101,11 +101,13 @@ def getCraftedTextFromText( gcodeText, exportRepository = None ):
 	"Export a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'export'):
 		return gcodeText
-	if exportRepository == None:
+	if exportRepository is None:
 		exportRepository = settings.getReadRepository( ExportRepository() )
-	if not exportRepository.activateExport.value:
-		return gcodeText
-	return ExportSkein().getCraftedGcode( exportRepository, gcodeText )
+	return (
+		ExportSkein().getCraftedGcode(exportRepository, gcodeText)
+		if exportRepository.activateExport.value
+		else gcodeText
+	)
 
 def getDistanceGcode( exportText ):
 	"Get gcode lines with distance variable added."
@@ -142,10 +144,14 @@ def getReplaced( exportText ):
 
 def getSelectedPluginModule( plugins ):
 	"Get the selected plugin module."
-	for plugin in plugins:
-		if plugin.value:
-			return archive.getModuleWithDirectoryPath( plugin.directoryPath, plugin.name )
-	return None
+	return next(
+		(
+			archive.getModuleWithDirectoryPath(plugin.directoryPath, plugin.name)
+			for plugin in plugins
+			if plugin.value
+		),
+		None,
+	)
 
 def writeOutput(fileName=''):
 	"Export a gcode linear move file."
@@ -155,7 +161,9 @@ def writeOutput(fileName=''):
 	exportRepository = ExportRepository()
 	settings.getReadRepository( exportRepository )
 	startTime = time.time()
-	print('File ' + archive.getSummarizedFileName(fileName) + ' is being chain exported.')
+	print(
+		f'File {archive.getSummarizedFileName(fileName)} is being chain exported.'
+	)
 	suffixFileName = fileName[ : fileName.rfind('.') ] + '.' + exportRepository.fileExtension.value
 	gcodeText = gcodec.getGcodeFileText( fileName, '')
 	procedures = skeinforge_craft.getProcedures('export', gcodeText )
@@ -166,26 +174,33 @@ def writeOutput(fileName=''):
 	if exportRepository.savePenultimateGcode.value:
 		penultimateFileName = fileName[ : fileName.rfind('.') ] + '_penultimate.gcode'
 		archive.writeFileText( penultimateFileName, gcodeText )
-		print('The penultimate file is saved as ' + archive.getSummarizedFileName( penultimateFileName ) )
+		print(
+			f'The penultimate file is saved as {archive.getSummarizedFileName(penultimateFileName)}'
+		)
 	exportChainGcode = getCraftedTextFromText( gcodeText, exportRepository )
 	replaceableExportChainGcode = None
 	selectedPluginModule = getSelectedPluginModule( exportRepository.exportPlugins )
-	if selectedPluginModule == None:
+	if selectedPluginModule is None:
 		replaceableExportChainGcode = exportChainGcode
+	elif selectedPluginModule.globalIsReplaceable:
+		replaceableExportChainGcode = selectedPluginModule.getOutput( exportChainGcode )
 	else:
-		if selectedPluginModule.globalIsReplaceable:
-			replaceableExportChainGcode = selectedPluginModule.getOutput( exportChainGcode )
-		else:
-			selectedPluginModule.writeOutput( suffixFileName, exportChainGcode )
+		selectedPluginModule.writeOutput( suffixFileName, exportChainGcode )
 	if replaceableExportChainGcode != None:
 		replaceableExportChainGcode = getReplaced( replaceableExportChainGcode )
 		archive.writeFileText( suffixFileName, replaceableExportChainGcode )
-		print('The exported file is saved as ' + archive.getSummarizedFileName(suffixFileName) )
+		print(
+			f'The exported file is saved as {archive.getSummarizedFileName(suffixFileName)}'
+		)
 	if exportRepository.alsoSendOutputTo.value != '':
-		if replaceableExportChainGcode == None:
+		if replaceableExportChainGcode is None:
 			replaceableExportChainGcode = selectedPluginModule.getOutput( exportChainGcode )
-		exec('print >> ' + exportRepository.alsoSendOutputTo.value + ', replaceableExportChainGcode')
-	print('It took %s to export the file.' % euclidean.getDurationString( time.time() - startTime ) )
+		exec(
+			f'print >> {exportRepository.alsoSendOutputTo.value}, replaceableExportChainGcode'
+		)
+	print(
+		f'It took {euclidean.getDurationString(time.time() - startTime)} to export the file.'
+	)
 
 
 class ExportRepository:
@@ -250,7 +265,7 @@ class ExportSkein:
 	def getLineWithTruncatedNumber(self, character, line, splitLine):
 		'Get a line with the number after the character truncated.'
 		numberString = gcodec.getStringFromCharacterSplitLine(character, splitLine)
-		if numberString == None:
+		if numberString is None:
 			return line
 		roundedNumberString = euclidean.getRoundedToPlacesString(self.decimalPlacesExported, float(numberString))
 		return gcodec.getLineWithValueString(character, line, splitLine, roundedNumberString)
@@ -267,7 +282,7 @@ class ExportSkein:
 			return
 		if firstWord == '(</extruderInitialization>)':
 			self.addLine('(<procedureDone> export </procedureDone>)')
-		if firstWord != 'G1' and firstWord != 'G2' and firstWord != 'G3' :
+		if firstWord not in ['G1', 'G2', 'G3']:
 			self.addLine(line)
 			return
 		line = self.getLineWithTruncatedNumber('X', line, splitLine)

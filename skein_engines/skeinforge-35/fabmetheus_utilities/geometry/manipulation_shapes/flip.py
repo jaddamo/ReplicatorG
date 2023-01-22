@@ -51,8 +51,10 @@ globalExecutionOrder = 200
 # return M
 def flipPoints(points, prefix, xmlElement):
 	"Flip the points."
-	origin = evaluate.getVector3ByPrefix(Vector3(), prefix + 'origin', xmlElement)
-	axis = evaluate.getVector3ByPrefix(Vector3(1.0, 0.0, 0.0), prefix + 'axis', xmlElement).getNormalized()
+	origin = evaluate.getVector3ByPrefix(Vector3(), f'{prefix}origin', xmlElement)
+	axis = evaluate.getVector3ByPrefix(
+		Vector3(1.0, 0.0, 0.0), f'{prefix}axis', xmlElement
+	).getNormalized()
 	for point in points:
 		point.setToVector3(point - 2.0 * axis.dot(point - origin) * axis)
 
@@ -74,7 +76,7 @@ def getManipulatedGeometryOutput(geometryOutput, xmlElement):
 
 def manipulateXMLElement(target, xmlElement):
 	"Manipulate the xml element."
-	if target.object == None:
+	if target.object is None:
 		return
 	for path in target.object.getPaths():
 		flipPoints(path, '', xmlElement)

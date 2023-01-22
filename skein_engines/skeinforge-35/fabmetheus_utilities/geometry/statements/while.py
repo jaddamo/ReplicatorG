@@ -18,7 +18,7 @@ __license__ = 'GPL 3.0'
 
 def processXMLElement(xmlElement):
 	"Process the xml element."
-	if xmlElement.object == None:
+	if xmlElement.object is None:
 		if 'condition' in xmlElement.attributeDictionary:
 			value = xmlElement.attributeDictionary['condition']
 			xmlElement.object = evaluate.getEvaluatorSplitWords(value)

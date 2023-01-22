@@ -28,7 +28,7 @@ def _getAccessibleAttribute(attributeName, xmlElement):
 		print(xmlElement)
 		return None
 	pluginModule = archive.getModuleWithPath(evaluate.globalCreationDictionary[functionName])
-	if pluginModule == None:
+	if pluginModule is None:
 		print('Warning, _getAccessibleAttribute in creation can not get a pluginModule for:')
 		print(functionName)
 		print(xmlElement)
@@ -50,11 +50,9 @@ class Creation:
 	def getCreation(self, *arguments):
 		"Get creation."
 		dictionary = {'_fromCreationEvaluator': 'true'}
-		firstArgument = None
-		if len(arguments) > 0:
-			firstArgument = arguments[0]
+		firstArgument = arguments[0] if arguments else None
 		if firstArgument.__class__ == dict:
-			dictionary.update(firstArgument)
+			dictionary |= firstArgument
 			return self.pluginModule.getGeometryOutput(None, self.xmlElement.getCopyShallow(dictionary))
 		copyShallow = self.xmlElement.getCopyShallow(dictionary)
 		return self.pluginModule.getGeometryOutputByArguments(arguments, copyShallow)

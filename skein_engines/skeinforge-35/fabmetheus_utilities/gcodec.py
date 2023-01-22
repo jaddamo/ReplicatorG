@@ -47,7 +47,7 @@ def getArcDistance(relativeLocation, splitLine):
 	'Get arc distance.'
 	halfPlaneLineDistance = 0.5 * abs(relativeLocation.dropAxis(2))
 	radius = getDoubleFromCharacterSplitLine('R', splitLine)
-	if radius == None:
+	if radius is None:
 		iFloat = getDoubleFromCharacterSplitLine('I', splitLine)
 		jFloat = getDoubleFromCharacterSplitLine('J', splitLine)
 		radius = abs(complex(iFloat, jFloat))
@@ -82,9 +82,7 @@ def getDoubleFromCharacterSplitLine(character, splitLine):
 def getDoubleFromCharacterSplitLineValue(character, splitLine, value):
 	'Get the double value of the string after the first occurence of the character in the split line, if it does not exist return the value.'
 	splitLineFloat = getDoubleFromCharacterSplitLine(character, splitLine)
-	if splitLineFloat == None:
-		return value
-	return splitLineFloat
+	return value if splitLineFloat is None else splitLineFloat
 
 def getFeedRateMinute(feedRateMinute, splitLine):
 	'Get the feed rate per minute if the split line has a feed rate.'
@@ -95,9 +93,7 @@ def getFeedRateMinute(feedRateMinute, splitLine):
 
 def getFirstWord(splitLine):
 	'Get the first word of a split line.'
-	if len(splitLine) > 0:
-		return splitLine[0]
-	return ''
+	return splitLine[0] if len(splitLine) > 0 else ''
 
 def getFirstWordFromLine(line):
 	'Get the first word of a line.'
@@ -107,9 +103,7 @@ def getGcodeFileText(fileName, gcodeText):
 	'Get the gcode text from a file if it the gcode text is empty and if the file is a gcode file.'
 	if gcodeText != '':
 		return gcodeText
-	if fileName.endswith('.gcode'):
-		return archive.getFileText(fileName)
-	return ''
+	return archive.getFileText(fileName) if fileName.endswith('.gcode') else ''
 
 def getIndexOfStartingWithSecond(letter, splitLine):
 	'Get index of the first occurence of the given letter in the split line, starting with the second word.  Return - 1 if letter is not found'
@@ -125,13 +119,13 @@ def getLineWithValueString(character, line, splitLine, valueString):
 	roundedValueString = character + valueString
 	indexOfValue = getIndexOfStartingWithSecond(character, splitLine)
 	if indexOfValue == - 1:
-		return line + ' ' + roundedValueString
+		return f'{line} {roundedValueString}'
 	word = splitLine[indexOfValue]
 	return line.replace(word, roundedValueString)
 
 def getLocationFromSplitLine(oldLocation, splitLine):
 	'Get the location from the split line.'
-	if oldLocation == None:
+	if oldLocation is None:
 		oldLocation = Vector3()
 	return Vector3(
 		getDoubleFromCharacterSplitLineValue('X', splitLine, oldLocation.x),
@@ -144,16 +138,12 @@ def getSplitLineBeforeBracketSemicolon(line):
 	if semicolonIndex >= 0:
 		line = line[ : semicolonIndex ]
 	bracketIndex = line.find('(')
-	if bracketIndex > 0:
-		return line[: bracketIndex].split()
-	return line.split()
+	return line[: bracketIndex].split() if bracketIndex > 0 else line.split()
 
 def getStringFromCharacterSplitLine(character, splitLine):
 	'Get the string after the first occurence of the character in the split line.'
 	indexOfCharacter = getIndexOfStartingWithSecond(character, splitLine)
-	if indexOfCharacter < 0:
-		return None
-	return splitLine[indexOfCharacter][1 :]
+	return None if indexOfCharacter < 0 else splitLine[indexOfCharacter][1 :]
 
 def getWithoutBracketsEqualTab(line):
 	'Get a string without the greater than sign, the bracket and less than sign, the equal sign or the tab.'
@@ -177,20 +167,17 @@ def isProcedureDone(gcodeText, procedure):
 		elif firstWord == 'extrusionStart':
 			return False
 		procedureIndex = line.find(procedure)
-		if procedureIndex != -1:
-			if 'procedureDone' in splitLine:
-				nextIndex = splitLine.index('procedureDone') + 1
-				if nextIndex < len(splitLine):
-					nextWordSplit = splitLine[nextIndex].split(',')
-					if procedure in nextWordSplit:
-						return True
+		if procedureIndex != -1 and 'procedureDone' in splitLine:
+			nextIndex = splitLine.index('procedureDone') + 1
+			if nextIndex < len(splitLine):
+				nextWordSplit = splitLine[nextIndex].split(',')
+				if procedure in nextWordSplit:
+					return True
 	return False
 
 def isProcedureDoneOrFileIsEmpty(gcodeText, procedure):
 	'Determine if the procedure has been done on the gcode text or the file is empty.'
-	if gcodeText == '':
-		return True
-	return isProcedureDone(gcodeText, procedure)
+	return True if gcodeText == '' else isProcedureDone(gcodeText, procedure)
 
 def isThereAFirstWord(firstWord, lines, startIndex):
 	'Parse gcode until the first word if there is one.'
@@ -318,7 +305,7 @@ class DistanceFeedRate:
 
 	def addParameter(self, firstWord, parameter):
 		'Add the parameter.'
-		self.addLine(firstWord + ' S' + euclidean.getRoundedToThreePlaces(parameter))
+		self.addLine(f'{firstWord} S{euclidean.getRoundedToThreePlaces(parameter)}')
 
 	def addPerimeterBlock(self, loop, z):
 		'Add the perimeter gcode block for the loop.'
@@ -333,26 +320,26 @@ class DistanceFeedRate:
 
 	def addTagBracketedLine(self, tagName, value):
 		'Add a begin tag, balue and end tag.'
-		self.addLine('(<%s> %s </%s>)' % (tagName, value, tagName))
+		self.addLine(f'(<{tagName}> {value} </{tagName}>)')
 
 	def getBoundaryLine(self, location):
 		'Get boundary gcode line.'
-		return '(<boundaryPoint> X%s Y%s Z%s </boundaryPoint>)' % (self.getRounded(location.x), self.getRounded(location.y), self.getRounded(location.z))
+		return f'(<boundaryPoint> X{self.getRounded(location.x)} Y{self.getRounded(location.y)} Z{self.getRounded(location.z)} </boundaryPoint>)'
 
 	def getFirstWordMovement(self, firstWord, location):
 		'Get the start of the arc line.'
-		return '%s X%s Y%s Z%s' % (firstWord, self.getRounded(location.x), self.getRounded(location.y), self.getRounded(location.z))
+		return f'{firstWord} X{self.getRounded(location.x)} Y{self.getRounded(location.y)} Z{self.getRounded(location.z)}'
 
 	def getLinearGcodeMovement(self, point, z):
 		'Get a linear gcode movement.'
-		return 'G1 X%s Y%s Z%s' % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded(z) )
+		return f'G1 X{self.getRounded(point.real)} Y{self.getRounded(point.imag)} Z{self.getRounded(z)}'
 
 	def getLinearGcodeMovementWithFeedRate(self, feedRateMinute, point, z):
 		'Get a z limited gcode movement.'
 		linearGcodeMovement = self.getLinearGcodeMovement(point, z)
-		if feedRateMinute == None:
+		if feedRateMinute is None:
 			return linearGcodeMovement
-		return linearGcodeMovement + ' F' + self.getRounded(feedRateMinute)
+		return f'{linearGcodeMovement} F{self.getRounded(feedRateMinute)}'
 
 	def getLineWithFeedRate(self, feedRateMinute, line, splitLine):
 		'Get the line with a feed rate.'

@@ -77,11 +77,13 @@ def getCraftedTextFromText( gcodeText, jitterRepository = None ):
 	"Jitter a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'jitter'):
 		return gcodeText
-	if jitterRepository == None:
+	if jitterRepository is None:
 		jitterRepository = settings.getReadRepository( JitterRepository() )
-	if not jitterRepository.activateJitter.value:
-		return gcodeText
-	return JitterSkein().getCraftedGcode( jitterRepository, gcodeText )
+	return (
+		JitterSkein().getCraftedGcode(jitterRepository, gcodeText)
+		if jitterRepository.activateJitter.value
+		else gcodeText
+	)
 
 def getJitteredLoop( jitterDistance, jitterLoop ):
 	"Get a jittered loop path."
@@ -97,7 +99,7 @@ def getJitteredLoop( jitterDistance, jitterLoop ):
 		lastLength = totalLength
 		totalLength += abs( firstPoint - secondPoint )
 	remainingLength = jitterPosition - lastLength
-	pointIndex = pointIndex % len( jitterLoop )
+	pointIndex %= len( jitterLoop )
 	ultimateJitteredPoint = jitterLoop[ pointIndex ]
 	penultimateJitteredPointIndex = ( pointIndex + len( jitterLoop ) - 1 ) % len( jitterLoop )
 	penultimateJitteredPoint = jitterLoop[ penultimateJitteredPointIndex ]
@@ -174,7 +176,7 @@ class JitterSkein:
 
 	def addGcodeMovementZ(self, feedRateMinute, point, z):
 		"Add a movement to the output."
-		if feedRateMinute == None:
+		if feedRateMinute is None:
 			feedRateMinute = self.operatingFeedRatePerMinute
 		self.distanceFeedRate.addGcodeMovementZWithFeedRate(feedRateMinute, point, z)
 
@@ -191,7 +193,7 @@ class JitterSkein:
 				self.beforeLoopLocation = self.oldLoopLocationComplex
 			perimeterHalfWidth = 0.5 * self.perimeterWidth
 			loop = euclidean.getLoopStartingNearest( perimeterHalfWidth, self.beforeLoopLocation, loop )
-		if self.layerJitter != 0.0 and self.oldLoopLocationComplex == None:
+		if self.layerJitter != 0.0 and self.oldLoopLocationComplex is None:
 			loop = getJitteredLoop( self.layerJitter, loop )
 			loop = euclidean.getAwayPoints( loop, 0.2 * self.perimeterWidth )
 		self.loopPath.path = loop + [loop[0]]
@@ -212,13 +214,12 @@ class JitterSkein:
 		"Add to loop path if this is a loop or path."
 		location = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
 		self.feedRateMinute = gcodec.getFeedRateMinute( self.feedRateMinute, splitLine )
-		if self.isLoopPerimeter:
-			if self.isNextExtruderOn():
-				self.loopPath = euclidean.PathZ(location.z)
-				if self.oldLocation != None:
-					self.beforeLoopLocation = self.oldLocation.dropAxis(2)
+		if self.isLoopPerimeter and self.isNextExtruderOn():
+			self.loopPath = euclidean.PathZ(location.z)
+			if self.oldLocation != None:
+				self.beforeLoopLocation = self.oldLocation.dropAxis(2)
 		self.oldLocation = location
-		if self.loopPath == None:
+		if self.loopPath is None:
 			self.oldLoopLocationComplex = None
 			return line
 		self.loopPath.path.append( location.dropAxis(2) )
@@ -232,7 +233,7 @@ class JitterSkein:
 			line = self.lines[ afterIndex ]
 			splitLine = gcodec.getSplitLineBeforeBracketSemicolon(line)
 			firstWord = gcodec.getFirstWord(splitLine)
-			if firstWord == 'G1' or firstWord == 'M103':
+			if firstWord in ['G1', 'M103']:
 				return False
 			elif firstWord == 'M101':
 				return True
@@ -257,7 +258,7 @@ class JitterSkein:
 			self.layerCount.printProgressIncrement('jitter')
 			self.layerGolden += 0.61803398874989479
 			self.layerJitter = self.jitter * ( math.fmod( self.layerGolden, 1.0 ) - 0.5 )
-		elif firstWord == '(<loop>' or firstWord == '(<perimeter>':
+		elif firstWord in ['(<loop>', '(<perimeter>']:
 			self.isLoopPerimeter = True
 		self.distanceFeedRate.addLine(line)
 

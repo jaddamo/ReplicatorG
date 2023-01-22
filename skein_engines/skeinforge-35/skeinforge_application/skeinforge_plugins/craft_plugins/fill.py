@@ -237,14 +237,14 @@ def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gr
 	pathIndexTable = {}
 	addPathIndexFirstSegment( gridPixel, pathIndexTable, pixelTable, segmentFirstPixel )
 	addPathIndexSecondSegment( gridPixel, pathIndexTable, pixelTable, segmentSecondPixel )
-	for pathIndex in pathIndexTable.keys():
+	for pathIndex in pathIndexTable:
 		path = paths[ pathIndex ]
 		for pointIndex in xrange( len(path) - 1 ):
 			pointFirst = path[ pointIndex ]
 			pointSecond = path[ pointIndex + 1 ]
 			yIntersection = getYIntersectionInsideYSegment( segmentFirstY, segmentSecondY, pointFirst, pointSecond, gridPoint.real )
 			addYIntersectionPathToList( pathIndex, pointIndex, gridPoint.imag, yIntersection, yIntersectionPaths )
-	if len( yIntersectionPaths ) < 1:
+	if not yIntersectionPaths:
 		return
 	yCloseToCenterPaths = []
 	if isDoubleJunction:
@@ -325,7 +325,7 @@ def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, ho
 	"Add sparse endpoints from a segment."
 	endpointFirstPoint = segment[0].point
 	endpointSecondPoint = segment[1].point
-	if surroundingXIntersections == None:
+	if surroundingXIntersections is None:
 		endpoints += segment
 		return
 	if infillSolidity > 0.0:
@@ -354,7 +354,7 @@ def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, ho
 
 def addYIntersectionPathToList( pathIndex, pointIndex, y, yIntersection, yIntersectionPaths ):
 	"Add the y intersection path to the y intersection paths."
-	if yIntersection == None:
+	if yIntersection is None:
 		return
 	yIntersectionPath = YIntersectionPath( pathIndex, pointIndex, yIntersection )
 	yIntersectionPath.yMinusCenter = yIntersection - y
@@ -366,17 +366,13 @@ def compareDistanceFromCenter(self, other):
 	distanceFromCenterOther = abs( other.yMinusCenter )
 	if distanceFromCenter > distanceFromCenterOther:
 		return 1
-	if distanceFromCenter < distanceFromCenterOther:
-		return - 1
-	return 0
+	return - 1 if distanceFromCenter < distanceFromCenterOther else 0
 
 def comparePointIndexDescending(self, other):
 	"Get comparison in order to sort y intersections in descending order of point index."
 	if self.pointIndex > other.pointIndex:
 		return - 1
-	if self.pointIndex < other.pointIndex:
-		return 1
-	return 0
+	return 1 if self.pointIndex < other.pointIndex else 0
 
 def createExtraFillLoops( radius, shouldExtraLoopsBeAdded, surroundingLoop ):
 	"Create extra fill loops."
@@ -408,11 +404,13 @@ def getCraftedTextFromText(gcodeText, repository=None):
 	"Fill the inset gcode text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'fill'):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( FillRepository() )
-	if not repository.activateFill.value:
-		return gcodeText
-	return FillSkein().getCraftedGcode( repository, gcodeText )
+	return (
+		FillSkein().getCraftedGcode(repository, gcodeText)
+		if repository.activateFill.value
+		else gcodeText
+	)
 
 def getClosestOppositeIntersectionPaths( yIntersectionPaths ):
 	"Get the close to center paths, starting with the first and an additional opposite if it exists."
@@ -433,10 +431,11 @@ def getExtraFillLoops(loops, radius):
 	centers = intercircle.getCentersFromPoints(intercircle.getPointsFromLoops(loops, greaterThanRadius), greaterThanRadius)
 	for center in centers:
 		inset = intercircle.getSimplifiedInsetFromClockwiseLoop(center, radius)
-		if intercircle.isLargeSameDirection(inset, center, radius):
-			if euclidean.getIsInFilledRegion(loops, euclidean.getLeftPoint(inset)):
-				inset.reverse()
-				extraFillLoops.append(inset)
+		if intercircle.isLargeSameDirection(
+			inset, center, radius
+		) and euclidean.getIsInFilledRegion(loops, euclidean.getLeftPoint(inset)):
+			inset.reverse()
+			extraFillLoops.append(inset)
 	return extraFillLoops
 
 def getKeyIsInPixelTableAddValue( key, pathIndexTable, pixelTable ):
@@ -470,9 +469,7 @@ def getNonIntersectingGridPointLine( gridPointInsetX, isJunctionWide, paths, pix
 
 def getPlusMinusSign(number):
 	"Get one if the number is zero or positive else negative one."
-	if number >= 0.0:
-		return 1.0
-	return - 1.0
+	return 1.0 if number >= 0.0 else - 1.0
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -494,7 +491,7 @@ def getWithLeastLength( path, point ):
 def getYIntersectionInsideYSegment( segmentFirstY, segmentSecondY, beginComplex, endComplex, x ):
 	"Get the y intersection inside the y segment if it does, else none."
 	yIntersection = euclidean.getYIntersectionIfExists( beginComplex, endComplex, x )
-	if yIntersection == None:
+	if yIntersection is None:
 		return None
 	if yIntersection < min( segmentFirstY, segmentSecondY ):
 		return None
@@ -566,9 +563,12 @@ def insertGridPointPairWithLinePath( gridPoint, gridPointInsetX, gridPoints, isJ
 
 def isAddedPointOnPathFree( path, pixelTable, point, pointIndex, width ):
 	"Determine if the point added to a path is intersecting the pixel table or the path."
-	if pointIndex > 0 and pointIndex < len(path):
-		if isSharpCorner( ( path[ pointIndex - 1 ] ), point, ( path[ pointIndex ] ) ):
-			return False
+	if (
+		pointIndex > 0
+		and pointIndex < len(path)
+		and isSharpCorner((path[pointIndex - 1]), point, (path[pointIndex]))
+	):
+		return False
 	pointIndexMinusOne = pointIndex - 1
 	if pointIndexMinusOne >= 0:
 		maskTable = {}
@@ -643,7 +643,7 @@ def isPointAddedAroundClosest( pixelTable, layerExtrusionWidth, paths, removedEn
 			if distanceSquared < closestDistanceSquared:
 				closestDistanceSquared = distanceSquared
 				closestPathIndex = pathIndex
-	if closestPathIndex == None:
+	if closestPathIndex is None:
 		return
 	if closestDistanceSquared < 0.8 * layerExtrusionWidth * layerExtrusionWidth:
 		return

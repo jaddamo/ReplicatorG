@@ -51,9 +51,7 @@ class Sphere( cube.Cube ):
 		for zIndex in xrange( 1, numberOfDivisions ):
 			z = elementExtent.real * float( zIndex ) + bottomLeft.real
 			zList.append(z)
-		gridLoop = []
-		for vertex in indexedGridBottomLoop:
-			gridLoop.append( vertex.dropAxis(2) )
+		gridLoop = [vertex.dropAxis(2) for vertex in indexedGridBottomLoop]
 		indexedLoops += trianglemesh.getAddIndexedLoops( gridLoop, self.vertexes, zList )
 		indexedGridTop = trianglemesh.getAddIndexedGrid( grid, self.vertexes, 1.0 )
 		indexedLoops.append( trianglemesh.getIndexedLoopFromIndexedGrid( indexedGridTop ) )

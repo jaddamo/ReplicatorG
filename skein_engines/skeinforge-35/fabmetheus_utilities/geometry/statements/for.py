@@ -26,9 +26,9 @@ def processChildrenByIndexValue( function, index, indexValue, value, xmlElement 
 
 def processXMLElement(xmlElement):
 	"Process the xml element."
-	if xmlElement.object == None:
+	if xmlElement.object is None:
 		xmlElement.object = IndexValue(xmlElement)
-	if xmlElement.object.inSplitWords == None:
+	if xmlElement.object.inSplitWords is None:
 		return
 	xmlProcessor = xmlElement.getXMLProcessor()
 	if len( xmlProcessor.functions ) < 1:
@@ -37,7 +37,7 @@ def processXMLElement(xmlElement):
 		return
 	function = xmlProcessor.functions[-1]
 	inValue = evaluate.getEvaluatedExpressionValueBySplitLine( xmlElement.object.inSplitWords, xmlElement )
-	if inValue.__class__ == list or inValue.__class__ == str:
+	if inValue.__class__ in [list, str]:
 		for index, value in enumerate( inValue ):
 			processChildrenByIndexValue( function, index, xmlElement.object, value, xmlElement )
 		return

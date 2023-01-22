@@ -77,11 +77,13 @@ def getCraftedTextFromText(gcodeText, repository=None):
 	"Drill a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'drill'):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( DrillRepository() )
-	if not repository.activateDrill.value:
-		return gcodeText
-	return DrillSkein().getCraftedGcode(gcodeText, repository)
+	return (
+		DrillSkein().getCraftedGcode(gcodeText, repository)
+		if repository.activateDrill.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -115,7 +117,7 @@ class ThreadLayer:
 
 	def __repr__(self):
 		"Get the string representation of this thread layer."
-		return '%s, %s' % ( self.z, self.points )
+		return f'{self.z}, {self.points}'
 
 
 class DrillRepository:
@@ -200,10 +202,7 @@ class DrillSkein:
 
 	def isPointClose( self, drillPoint, points ):
 		"Determine if a point on the thread layer is close."
-		for point in points:
-			if abs( point - drillPoint ) < self.maximumDistance:
-				return True
-		return False
+		return any(abs(point - drillPoint) < self.maximumDistance for point in points)
 
 	def linearMove( self, splitLine ):
 		"Add a linear move to the loop."
@@ -236,9 +235,8 @@ class DrillSkein:
 			return
 		firstWord = splitLine[0]
 		self.distanceFeedRate.addLine(line)
-		if firstWord == '(<layer>':
-			if not self.isDrilled:
-				self.addDrillHoles()
+		if firstWord == '(<layer>' and not self.isDrilled:
+			self.addDrillHoles()
 
 	def parseSurroundingLoop(self, line):
 		"Parse a surrounding loop."
@@ -246,26 +244,27 @@ class DrillSkein:
 		if len(splitLine) < 1:
 			return
 		firstWord = splitLine[0]
-		if firstWord == 'G1':
-			self.linearMove(splitLine)
-		if firstWord == 'M101':
-			self.extruderActive = True
-		elif firstWord == 'M103':
-			self.extruderActive = False
+		if firstWord == '(</boundaryPerimeter>)':
+			if self.boundary != None:
+				self.threadLayer.points.append( getPolygonCenter( self.boundary ) )
+				self.boundary = None
+
+		elif firstWord == '(<boundaryPerimeter>)':
+			self.addThreadLayerIfNone()
 		elif firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine(None, splitLine)
-			if self.boundary == None:
+			if self.boundary is None:
 				self.boundary = []
 			self.boundary.append( location.dropAxis(2) )
 		elif firstWord == '(<layer>':
 			self.layerZ = float(splitLine[1])
 			self.threadLayer = None
-		elif firstWord == '(<boundaryPerimeter>)':
-			self.addThreadLayerIfNone()
-		elif firstWord == '(</boundaryPerimeter>)':
-			if self.boundary != None:
-				self.threadLayer.points.append( getPolygonCenter( self.boundary ) )
-				self.boundary = None
+		elif firstWord == 'G1':
+			self.linearMove(splitLine)
+		elif firstWord == 'M101':
+			self.extruderActive = True
+		elif firstWord == 'M103':
+			self.extruderActive = False
 
 
 def main():

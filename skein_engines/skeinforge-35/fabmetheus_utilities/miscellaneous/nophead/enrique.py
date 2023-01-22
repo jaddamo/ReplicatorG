@@ -6,9 +6,8 @@ from vector3 import Vector3
 # @param  fileName name of the file
 # @return  entire text of a file.
 def getFileText(fileName):
-    file = open( fileName, 'r')
-    fileText = file.read()
-    file.close()
+    with open( fileName, 'r') as file:
+        fileText = file.read()
     return fileText
 
 # Get the all the lines of text of a text.
@@ -71,10 +70,8 @@ class g2gif:
         for line in textLines:
             self.parseLine(line)
         self.images.append(self.image)
-        # write GIF animation
-        fp = open(outfile, "wb")
-        makedelta(fp, self.images)
-        fp.close()
+        with open(outfile, "wb") as fp:
+            makedelta(fp, self.images)
 
 
     def parseLine(self, line):
@@ -84,7 +81,7 @@ class g2gif:
         firstWord = splitLine[0]
         if firstWord == 'G1':
             self.linearMove(splitLine)
-        if firstWord == 'M101':
+        elif firstWord == 'M101':
             self.do_move = 1
 
     # Set the feedRate to the gcode split line.
@@ -110,7 +107,7 @@ class g2gif:
         self.setPointComponent( location, splitLine )
         if location.z != self.last_pos.z:
             if self.image:
-                for i in xrange(10):
+                for _ in xrange(10):
                     self.images.append(self.image)
             self.image = Image.new('P', (300, 200), 255)
             palette = []
@@ -120,13 +117,12 @@ class g2gif:
                         palette.extend((red * 255 / 7, green * 255 / 7, blue * 255 / 3))
             self.image.putpalette(palette)
             self.segment = 0
+        elif self.do_move:
+            draw = ImageDraw.Draw(self.image)
+            draw.line( ( self.scale( self.last_pos.x, self.last_pos.y ), self.scale( location.x, location.y ) ), fill = 192 )
+            self.segment = self.segment + 1
         else:
-            if self.do_move:
-                draw = ImageDraw.Draw(self.image)
-                draw.line( ( self.scale( self.last_pos.x, self.last_pos.y ), self.scale( location.x, location.y ) ), fill = 192 )
-                self.segment = self.segment + 1
-            else:
-                draw = ImageDraw.Draw(self.image)
-                draw.line( ( self.scale( self.last_pos.x, self.last_pos.y ), self.scale(location.x, location.y ) ), fill = self.segment )
+            draw = ImageDraw.Draw(self.image)
+            draw.line( ( self.scale( self.last_pos.x, self.last_pos.y ), self.scale(location.x, location.y ) ), fill = self.segment )
         self.last_pos = location
         self.do_move = 0

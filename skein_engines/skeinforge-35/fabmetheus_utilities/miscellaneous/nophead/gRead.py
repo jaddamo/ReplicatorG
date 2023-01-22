@@ -4,9 +4,8 @@ from vector3 import Vector3
 # @param  fileName name of the file
 # @return  entire text of a file.
 def getFileText(fileName):
-    file = open( fileName, 'r')
-    fileText = file.read()
-    file.close()
+    with open( fileName, 'r') as file:
+        fileText = file.read()
     return fileText
 
 # Get the all the lines of text of a text.
@@ -57,14 +56,14 @@ class gRead:
         firstWord = splitLine[0]
         if firstWord == 'G1':
             self.linearMove(splitLine)
-        if firstWord == 'M110':             #filament height only sent by skeinforge at the moment
-            self.skeinforge = 1
-            self.newThread()
-        if firstWord == 'M103':             #extruder off
+        elif firstWord == 'G92':
+            self.newThread()            #end of thread if skeinforge
+        elif firstWord == 'M103':
             if self.skeinforge:
                 self.newThread()            #end of thread if skeinforge
-        if firstWord == 'G92':              #offset coordinate system
-            self.newThread()                #for RepRap
+        elif firstWord == 'M110':
+            self.skeinforge = 1
+            self.newThread()
 
     # Set a point to the gcode split line.
     def setPointComponent( self, point, splitLine ):
@@ -90,14 +89,15 @@ class gRead:
         self.thread = []
 
     def linearMove( self, splitLine ):
-        if self.thread != None:
-            pos = self.last_pos.copy()
-            self.setPointComponent( pos, splitLine )
-            if pos.z > self.max_z:
+        if self.thread is None:
+            return
+        pos = self.last_pos.copy()
+        self.setPointComponent( pos, splitLine )
+        if pos.z > self.max_z:
 #                self.newLayer()
-                self.max_z = pos.z
-            if pos.z < self.last_pos.z:
-                self.newThread()
-            if self.skeinforge or pos.z < self.max_z:
-                self.thread.append(pos)
-            self.last_pos = pos
+            self.max_z = pos.z
+        if pos.z < self.last_pos.z:
+            self.newThread()
+        if self.skeinforge or pos.z < self.max_z:
+            self.thread.append(pos)
+        self.last_pos = pos

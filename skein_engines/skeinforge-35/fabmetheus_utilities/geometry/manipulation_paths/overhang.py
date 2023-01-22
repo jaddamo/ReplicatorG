@@ -28,10 +28,12 @@ def addUnsupportedPointIndexes( alongAway ):
 	addedUnsupportedPointIndexes = []
 	for pointIndex in xrange( len( alongAway.loop ) ):
 		point = alongAway.loop[pointIndex]
-		if pointIndex not in alongAway.unsupportedPointIndexes:
-			if not alongAway.getIsClockwisePointSupported(point):
-				alongAway.unsupportedPointIndexes.append( pointIndex )
-				addedUnsupportedPointIndexes.append( pointIndex )
+		if (
+			pointIndex not in alongAway.unsupportedPointIndexes
+			and not alongAway.getIsClockwisePointSupported(point)
+		):
+			alongAway.unsupportedPointIndexes.append( pointIndex )
+			addedUnsupportedPointIndexes.append( pointIndex )
 	for pointIndex in addedUnsupportedPointIndexes:
 		point = alongAway.loop[pointIndex]
 		point.y += alongAway.maximumYPlus
@@ -91,25 +93,27 @@ def alterWiddershinsSupportedPathByPoint( alongAway, overhangWiddershinsLeft, ov
 	if alongAway.getIsWiddershinsPointSupported(point):
 		return
 	overhangWiddershins = overhangWiddershinsLeft
-	if overhangWiddershinsRight.getDistance() < overhangWiddershinsLeft.getDistance():
+	if overhangWiddershinsRight.getDistance() < overhangWiddershins.getDistance():
 		overhangWiddershins = overhangWiddershinsRight
 	overhangWiddershins.alterLoop()
 
 def compareYAscending( point, pointOther ):
 	"Get comparison in order to sort points in ascending y."
-	if point.y < pointOther.y:
-		return - 1
-	return int( point.y > pointOther.y )
+	return - 1 if point.y < pointOther.y else int( point.y > pointOther.y )
 
 def getManipulatedPaths(close, loop, prefix, sideLength, xmlElement):
 	"Get path with overhangs removed or filled in."
 	if len(loop) < 3:
 		return [loop]
-	if not evaluate.getEvaluatedBooleanDefault( True, prefix + 'activate', xmlElement ):
+	if not evaluate.getEvaluatedBooleanDefault(
+		True, f'{prefix}activate', xmlElement
+	):
 		return [loop]
 	overhangAngle = evaluate.getOverhangSupportAngle(xmlElement)
 	overhangPlaneAngle = euclidean.getWiddershinsUnitPolar( 0.5 * math.pi - overhangAngle )
-	overhangVerticalAngle = math.radians( evaluate.getEvaluatedFloatDefault(0.0,  prefix + 'inclination', xmlElement ) )
+	overhangVerticalAngle = math.radians(
+		evaluate.getEvaluatedFloatDefault(0.0, f'{prefix}inclination', xmlElement)
+	)
 	if overhangVerticalAngle != 0.0:
 		overhangVerticalCosine = abs( math.cos( overhangVerticalAngle ) )
 		if overhangVerticalCosine == 0.0:
@@ -145,7 +149,7 @@ class AlongAway:
 
 	def __repr__(self):
 		"Get the string representation of AlongAway."
-		return '%s' % ( self.overhangPlaneAngle )
+		return f'{self.overhangPlaneAngle}'
 
 	def addToBottomPoints(self, point):
 		"Add point to bottom points and set y to minimumY."
@@ -170,7 +174,7 @@ class AlongAway:
 				self.pointIndex = pointIndex
 		if numberOfIntersectionsBelow % 2 == 0:
 			return True
-		if self.pointIndex == None:
+		if self.pointIndex is None:
 			return True
 		if self.getIsPointSupportedBySegment( self.pointIndex - 1 + len( self.loop ) ):
 			return True
@@ -196,7 +200,7 @@ class AlongAway:
 				self.pointIndex = pointIndex
 		if numberOfIntersectionsBelow % 2 == 1:
 			return True
-		if self.pointIndex == None:
+		if self.pointIndex is None:
 			return True
 		if self.getIsPointSupportedBySegment( self.pointIndex - 1 + len( self.loop ) ):
 			return True
@@ -219,7 +223,7 @@ class OverhangClockwise:
 
 	def __repr__(self):
 		"Get the string representation of OverhangClockwise."
-		return '%s' % ( self.intersectionPlaneAngle )
+		return f'{self.intersectionPlaneAngle}'
 
 	def alterLoop( self, unsupportedPointIndexes ):
 		"Alter alongAway loop."
@@ -236,9 +240,9 @@ class OverhangClockwise:
 		if remainingWidth <= 0.0:
 			del self.alongAway.loop[ unsupportedBeginIndex : endIndex ]
 			return
-		highest = begin
 		supportX = begin.x + remainingWidth
-		if end.y > begin.y:
+		highest = begin
+		if end.y > highest.y:
 			highest = end
 			supportX = end.x - remainingWidth
 		tipY = highest.y + self.halfRiseOverWidth * remainingWidth
@@ -277,7 +281,7 @@ class OverhangWiddershinsLeft:
 
 	def __repr__(self):
 		"Get the string representation of OverhangWiddershins."
-		return '%s' % ( self.intersectionPlaneAngle )
+		return f'{self.intersectionPlaneAngle}'
 
 	def alterLoop(self):
 		"Alter alongAway loop."
@@ -288,7 +292,7 @@ class OverhangWiddershinsLeft:
 			intersectionPoint = insertedPoint + Vector3( intersectionRelativeComplex.real, intersectionRelativeComplex.imag )
 			self.alongAway.loop.append( intersectionPoint )
 			return
-		if self.closestBottomPoint == None:
+		if self.closestBottomPoint is None:
 			return
 		if self.closestBottomPoint not in self.alongAway.loop:
 			return
@@ -307,7 +311,7 @@ class OverhangWiddershinsLeft:
 		"Get distance between point and nearest intersection or bottom point along line."
 		self.pointMinusBottomY = self.alongAway.point.y - self.alongAway.minimumY
 		self.diagonalDistance = self.pointMinusBottomY * self.diagonalRatio
-		if self.alongAway.pointIndex == None:
+		if self.alongAway.pointIndex is None:
 			return self.getDistanceToBottom()
 		rotatedLoop = euclidean.getPointsRoundZAxis( self.intersectionYMirror,  euclidean.getComplexPath( self.alongAway.loop ) )
 		rotatedPointComplex = rotatedLoop[ self.alongAway.pointIndex ]
@@ -318,9 +322,12 @@ class OverhangWiddershinsLeft:
 			beginComplex = rotatedLoop[ pointIndex ]
 			endComplex = rotatedLoop[ (pointIndex + 1) % len( rotatedLoop ) ]
 			xIntersection = euclidean.getXIntersectionIfExists( beginComplex, endComplex, rotatedPointComplex.imag )
-			if xIntersection != None:
-				if xIntersection >= beginX and xIntersection < endX:
-					xIntersectionIndexList.append( euclidean.XIntersectionIndex( pointIndex, xIntersection ) )
+			if (
+				xIntersection != None
+				and xIntersection >= beginX
+				and xIntersection < endX
+			):
+				xIntersectionIndexList.append( euclidean.XIntersectionIndex( pointIndex, xIntersection ) )
 		self.closestXDistance = 987654321.0
 		self.closestXIntersectionIndex = None
 		for xIntersectionIndex in xIntersectionIndexList:
@@ -339,10 +346,9 @@ class OverhangWiddershinsLeft:
 		closestDistanceX = 987654321.0
 		for point in self.alongAway.bottomPoints:
 			distanceX = abs( point.x - self.bottomX )
-			if self.getIsOnside(point.x):
-				if distanceX < closestDistanceX:
-					closestDistanceX = distanceX
-					self.closestBottomPoint = point
+			if self.getIsOnside(point.x) and distanceX < closestDistanceX:
+				closestDistanceX = distanceX
+				self.closestBottomPoint = point
 		return closestDistanceX + self.diagonalDistance
 
 	def getIntersectLoop(self):

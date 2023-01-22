@@ -53,7 +53,10 @@ class DisplayLine( MouseToolBase ):
 	def drawSelectedColoredLineText(self):
 		"Draw the selected line and text."
 		selectedColoredLine = self.getSelectedColoredLine()
-		if len( self.canvas.find_withtag('mouse_item') ) < 1 or selectedColoredLine == None:
+		if (
+			len(self.canvas.find_withtag('mouse_item')) < 1
+			or selectedColoredLine is None
+		):
 			return
 		tags = selectedColoredLine.displayString
 		lineCoordinates = self.canvas.coords( self.canvas.find_withtag('mouse_item')[-1] )

@@ -17,11 +17,9 @@ class MouseToolBase:
 	"The mouse tool base class, which does nothing."
 	def button1(self, event):
 		"The left button was clicked, <Button-1> function."
-		pass
 
 	def buttonRelease1(self, event):
 		"The left button was released, <ButtonRelease-1> function."
-		pass
 
 	def destroyEverything(self):
 		"Destroy items."
@@ -42,9 +40,7 @@ class MouseToolBase:
 		"Get the tag for the x and y."
 		tags = self.canvas.itemcget( self.canvas.find_closest(x, y), 'tags')
 		currentEnd = ' current'
-		if tags.find( currentEnd ) != - 1:
-			return tags[ : - len( currentEnd ) ]
-		return tags
+		return tags[: -len(currentEnd)] if tags.find(currentEnd) != -1 else tags
 
 	def isSelectionTool(self):
 		"Return if this mouse tool is a selection tool."
@@ -52,27 +48,21 @@ class MouseToolBase:
 
 	def keyPressDown(self, event):
 		"The down arrow was pressed."
-		pass
 
 	def keyPressLeft(self, event):
 		"The left arrow was pressed."
-		pass
 
 	def keyPressReturn(self, event):
 		"The return key was pressed."
-		pass
 
 	def keyPressRight(self, event):
 		"The right arrow was pressed."
-		pass
 
 	def keyPressUp(self, event):
 		"The up arrow was pressed."
-		pass
 
 	def motion( self, event, shift = False ):
 		"The mouse moved, <Motion> function."
-		pass
 
 	def setWindowItems( self, window ):
 		"Set the canvas and items."
@@ -82,4 +72,3 @@ class MouseToolBase:
 
 	def update(self):
 		"Update the mouse tool."
-		pass

@@ -34,11 +34,7 @@ printFailedPackets = False
 
 #this is done again in full decode, but needed here so num bytes to expect is known.
 def getPacketLen(buffer):	
-	l = breakHDB1( buffer[offset_hdb1] )
-	#l = buffer[offset_hdb1] & 0x0f;
-	#if (l & 8) != 0:
-	#	return 8 << (l & 7)
-	return l
+	return breakHDB1( buffer[offset_hdb1] )
 
 #PCaddress = 0
 
@@ -127,10 +123,8 @@ class SNAPPacket:
 		self.bytes.insert( 2, 0xFF & makeHDB1(self.NDB) )			#HDB1
 		self.bytes.insert( 3, 0xFF & self.DAB )				#DAB
 		self.bytes.insert( 4, 0xFF & self.SAB )				#SAB
-		
-		for d in self.dataBytes:	
-			self.bytes.append( 0xFF & d )				#DATA
 
+		self.bytes.extend(0xFF & d for d in self.dataBytes)
 		checksum = SNAPChecksum()
 		for d in self.bytes[1:]:
 			checksum.addData(d)
@@ -222,8 +216,7 @@ class SNAPPacket:
 		
 	# get a modules reply packet (not ack)
 	def getReply(self):
-		rep = getPacket(self.serial)
-		return rep
+		return getPacket(self.serial)
 	
 	#print packet info to console
 	def printPacket(self):
@@ -255,9 +248,13 @@ def makeHDB2(ACK, NAK):
 	SAB = 1			# Length of the Source Address Bytes, in Binary. RepRap currently only accepts source addresses of 1 byte length
 	DAB = 1			# Length of the Destination Address Bytes, in Binary. RepRap currently only accepts destinations of 1 byte length
 	PFB = 0			# Length of Protocol Flag Bytes. RepRap does not accept any protocol flag bytes, so this must be set to 00
-	HDB2val = ((DAB & 0x3) * pow(2,6)) | ((SAB & 0x3) * pow(2,4)) | ((PFB & 0x3) * pow(2,2)) | ((ACK & 0x1) * pow(2,1)) | (NAK & 0x1)
-	#print "HDB2 = '" + str(HDB2val) + "'"
-	return HDB2val
+	return (
+		((DAB & 0x3) * pow(2, 6))
+		| ((SAB & 0x3) * pow(2, 4))
+		| ((PFB & 0x3) * pow(2, 2))
+		| ((ACK & 0x1) * pow(2, 1))
+		| (NAK & 0x1)
+	)
 
 def breakHDB2(HDB2):
 	ACK = (HDB2 & 0x2) / pow(2,1)
@@ -268,13 +265,10 @@ def breakHDB2(HDB2):
 def makeHDB1(NDB):
 	CMD = 0			# Command Mode Bit. Not implemented by RepRap and should be set to 0
 	EMD = 0x3		# Currently RepRap only implements 8-bit self.crc. this should be set to 011
-	HDB1val = ((CMD & 0x1) * pow(2,7)) | ((EMD & 0x7) * pow(2,4)) | (0xF & NDB)
-	#print "HDB1 = '" + str(HDB1val) + "'"
-	return HDB1val
+	return ((CMD & 0x1) * pow(2,7)) | ((EMD & 0x7) * pow(2,4)) | (0xF & NDB)
 
 def breakHDB1(HDB1):
-	NDB = HDB1 & 0xF
-	return NDB
+	return HDB1 & 0xF
 
 	
 

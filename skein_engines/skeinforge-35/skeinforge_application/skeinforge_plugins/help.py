@@ -59,14 +59,32 @@ def addToMenu( master, menu, repository, window ):
 	capitalizedBasename = os.path.basename(path).capitalize()
 	helpRepository = settings.getReadRepository( skeinforge_help.HelpRepository() )
 	if repository.openWikiManualHelpPage != None and helpRepository.wikiManualPrimary.value:
-		menu.add_command( label = 'Local ' + capitalizedBasename, command = repository.openLocalHelpPage )
+		menu.add_command(
+			label=f'Local {capitalizedBasename}',
+			command=repository.openLocalHelpPage,
+		)
 	else:
-		settings.addAcceleratorCommand('<F1>', repository.openLocalHelpPage, master, menu, 'Local ' + capitalizedBasename )
+		settings.addAcceleratorCommand(
+			'<F1>',
+			repository.openLocalHelpPage,
+			master,
+			menu,
+			f'Local {capitalizedBasename}',
+		)
 	if repository.openWikiManualHelpPage != None:
 		if helpRepository.wikiManualPrimary.value:
-			settings.addAcceleratorCommand('<F1>', repository.openWikiManualHelpPage, master, menu, 'Wiki Manual ' + capitalizedBasename )
+			settings.addAcceleratorCommand(
+				'<F1>',
+				repository.openWikiManualHelpPage,
+				master,
+				menu,
+				f'Wiki Manual {capitalizedBasename}',
+			)
 		else:
-			menu.add_command( label = 'Wiki Manual ' + capitalizedBasename, command = repository.openWikiManualHelpPage )
+			menu.add_command(
+				label=f'Wiki Manual {capitalizedBasename}',
+				command=repository.openWikiManualHelpPage,
+			)
 	menu.add_separator()
 	settings.addMenuEntitiesToMenu( menu, helpRepository.menuEntities )
 

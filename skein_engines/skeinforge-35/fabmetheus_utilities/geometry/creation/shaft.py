@@ -21,7 +21,7 @@ __license__ = 'GPL 3.0'
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get vector3 vertexes from attribute dictionary."
-	if derivation == None:
+	if derivation is None:
 		derivation = ShaftDerivation()
 		derivation.setToXMLElement(xmlElement)
 	shaftPath = getShaftPath(derivation.depthBottom, derivation.depthTop, derivation.radius, derivation.sides)
@@ -87,10 +87,10 @@ class ShaftDerivation:
 			self.depthTopOverRadius, 'depthTopOverRadius', xmlElement)
 		self.radius = evaluate.getEvaluatedFloatDefault(self.radius, 'radius', xmlElement)
 		self.sides = evaluate.getEvaluatedIntDefault(self.sides, 'sides', xmlElement)
-		if self.depthBottom == None:
+		if self.depthBottom is None:
 			self.depthBottom = self.radius * self.depthBottomOverRadius
 		self.depthBottom = evaluate.getEvaluatedFloatDefault(self.depthBottom, 'depthBottom', xmlElement)
-		if self.depthTop == None:
+		if self.depthTop is None:
 			self.depthTop = self.radius * self.depthTopOverRadius
 		self.depthTop = evaluate.getEvaluatedFloatDefault(self.depthTop, 'depth', xmlElement)
 		self.depthTop = evaluate.getEvaluatedFloatDefault(self.depthTop, 'depthTop', xmlElement)

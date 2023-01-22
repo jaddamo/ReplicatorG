@@ -29,9 +29,7 @@ __license__ = 'GPL 3.0'
 def getCarving(fileName):
 	"Get a carving for the file using an import plugin."
 	pluginModule = fabmetheus_interpret.getInterpretPlugin(fileName)
-	if pluginModule == None:
-		return None
-	return pluginModule.getCarving(fileName)
+	return None if pluginModule is None else pluginModule.getCarving(fileName)
 
 def getSliceDictionary(xmlElement):
 	"Get the metadata slice attribute dictionary."
@@ -82,14 +80,18 @@ class SVGWriter:
 			marginRounded = self.getRounded(self.margin)
 			layerTranslateY = layerIndex * self.textHeight + (layerIndex + 1) * (self.extent.y * self.unitScale + self.margin)
 			translateYRounded = self.getRounded(layerTranslateY)
-			self.graphicsCopy.attributeDictionary['transform'] = 'translate(%s, %s)' % (marginRounded, translateYRounded)
-			self.graphicsCopy.getFirstChildWithClassName('text').text = 'Layer %s, z:%s' % (layerIndex, zRounded)
+			self.graphicsCopy.attributeDictionary[
+				'transform'
+			] = f'translate({marginRounded}, {translateYRounded})'
+			self.graphicsCopy.getFirstChildWithClassName(
+				'text'
+			).text = f'Layer {layerIndex}, z:{zRounded}'
 		self.pathXMLElement = self.graphicsCopy.getFirstChildWithClassName('path')
 		self.pathDictionary = self.pathXMLElement.attributeDictionary
 
 	def addOriginalAsComment(self, xmlElement):
 		"Add original xmlElement as a comment."
-		if xmlElement == None:
+		if xmlElement is None:
 			return
 		commentElement = XMLElement()
 		commentElement.className = 'comment'
@@ -102,9 +104,8 @@ class SVGWriter:
 			lineStripped = textLine.strip()
 			if lineStripped[: len('<!--')] == '<!--':
 				isComment = True
-			if not isComment:
-				if len(textLine) > 0:
-					commentElementOutput.write(textLine + '\n')
+			if not isComment and len(textLine) > 0:
+				commentElementOutput.write(textLine + '\n')
 			if '-->' in lineStripped:
 				isComment = False
 		commentElement.text = '<!-- Original XML Text:\n%s-->\n' % commentElementOutput.getvalue()
@@ -155,18 +156,24 @@ class SVGWriter:
 		javascriptControlBoxWidth = float( self.sliceDictionary['javascriptControlBoxWidth'] )
 		noJavascriptControlBoxHeight = float( self.sliceDictionary['noJavascriptControlBoxHeight'] )
 		controlTop = len( rotatedBoundaryLayers ) * ( self.margin + self.extent.y * self.unitScale + self.textHeight ) + 2.0 * self.margin + self.textHeight
-		self.svgElement.getFirstChildWithClassName('title').text = os.path.basename(fileName) + ' - Slice Layers'
-		svgElementDictionary['height'] = '%spx' % self.getRounded( controlTop + noJavascriptControlBoxHeight + self.margin )
+		self.svgElement.getFirstChildWithClassName(
+			'title'
+		).text = f'{os.path.basename(fileName)} - Slice Layers'
+		svgElementDictionary[
+			'height'
+		] = f'{self.getRounded(controlTop + noJavascriptControlBoxHeight + self.margin)}px'
 #		width = margin + (sliceDimX * unitScale) + margin;
 		width = 2.0 * self.margin + max( self.extent.x * self.unitScale, javascriptControlBoxWidth )
-		svgElementDictionary['width'] = '%spx' % self.getRounded( width )
+		svgElementDictionary['width'] = f'{self.getRounded(width)}px'
 		self.sliceDictionary['decimalPlacesCarried'] = str( self.decimalPlacesCarried )
 		if self.perimeterWidth != None:
 			self.sliceDictionary['perimeterWidth'] = self.getRounded( self.perimeterWidth )
 		self.sliceDictionary['yAxisPointingUpward'] = 'true'
 		self.sliceDictionary['procedureDone'] = procedureName
 		noJavascriptDictionary = self.svgElement.getXMLElementByID('noJavascriptControls').attributeDictionary
-		noJavascriptDictionary['transform'] = 'translate(%s, %s)' % ( self.getRounded(self.margin), self.getRounded( controlTop ) )
+		noJavascriptDictionary[
+			'transform'
+		] = f'translate({self.getRounded(self.margin)}, {self.getRounded(controlTop)})'
 		self.svgElement.getXMLElementByID('dimXNoJavascript').text = self.getRounded( self.extent.x )
 		self.svgElement.getXMLElementByID('dimYNoJavascript').text = self.getRounded( self.extent.y )
 		self.svgElement.getXMLElementByID('dimZNoJavascript').text = self.getRounded( self.extent.z )
@@ -187,13 +194,11 @@ class SVGWriter:
 
 	def getRoundedComplexString(self, point):
 		"Get the rounded complex string."
-		return self.getRounded( point.real ) + ' ' + self.getRounded( point.imag )
+		return f'{self.getRounded(point.real)} {self.getRounded(point.imag)}'
 
 	def getSVGStringForLoop( self, loop ):
 		"Get the svg loop string."
-		if len(loop) < 1:
-			return ''
-		return self.getSVGStringForPath(loop) + ' z'
+		return '' if len(loop) < 1 else f'{self.getSVGStringForPath(loop)} z'
 
 	def getSVGStringForLoops( self, loops ):
 		"Get the svg loops string."
@@ -201,7 +206,7 @@ class SVGWriter:
 		if len(loops) > 0:
 			loopString += self.getSVGStringForLoop( loops[0] )
 		for loop in loops[1 :]:
-			loopString += ' ' + self.getSVGStringForLoop(loop)
+			loopString += f' {self.getSVGStringForLoop(loop)}'
 		return loopString
 
 	def getSVGStringForPath( self, path ):
@@ -218,10 +223,10 @@ class SVGWriter:
 		"Get the svg transform string."
 		cornerMinimumXString = self.getRounded(-self.carving.getCarveCornerMinimum().x)
 		cornerMinimumYString = self.getRounded(-self.carving.getCarveCornerMinimum().y)
-		return 'scale(%s, %s) translate(%s, %s)' % (self.unitScale, - self.unitScale, cornerMinimumXString, cornerMinimumYString)
+		return f'scale({self.unitScale}, {-self.unitScale}) translate({cornerMinimumXString}, {cornerMinimumYString})'
 
 	def setMetadataNoscriptElement(self, prefix, value):
 		"Set the metadata value and the NoJavascript text."
 		valueString = self.getRounded(value)
 		self.sliceDictionary[prefix] = valueString
-		self.svgElement.getXMLElementByID(prefix + 'NoJavascript').text = valueString
+		self.svgElement.getXMLElementByID(f'{prefix}NoJavascript').text = valueString

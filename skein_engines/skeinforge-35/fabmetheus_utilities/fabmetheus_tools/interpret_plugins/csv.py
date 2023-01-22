@@ -50,7 +50,7 @@ def getCarving(fileName=''):
 	csvParser = CSVSimpleParser( fileName, None, csvText )
 	lowerClassName = csvParser.getRoot().className.lower()
 	pluginModule = archive.getModuleWithDirectoryPath( getPluginsDirectoryPath(), lowerClassName )
-	if pluginModule == None:
+	if pluginModule is None:
 		return None
 	return pluginModule.getCarvingFromParser( csvParser )
 
@@ -81,7 +81,7 @@ class CSVElement( xml_simple_reader.XMLElement ):
 
 	def continueParsingTable( self, line, lineStripped ):
 		"Parse replaced line."
-		if self.headingDictionary == None:
+		if self.headingDictionary is None:
 			self.headingDictionary = getLineDictionary(line)
 			return
 		csvElement = self
@@ -97,7 +97,11 @@ class CSVElement( xml_simple_reader.XMLElement ):
 				value = lineDictionary[ columnIndex ]
 				csvElement.attributeDictionary[key] = value
 		csvElement.addToIDDictionaryIFIDExists()
-		if len( csvElement.attributeDictionary ) == 0 or oldAttributeDictionaryLength == 0 or self.parent == None:
+		if (
+			len(csvElement.attributeDictionary) == 0
+			or oldAttributeDictionaryLength == 0
+			or self.parent is None
+		):
 			return
 		self.parent.children.append( csvElement )
 
@@ -120,9 +124,7 @@ class CSVElement( xml_simple_reader.XMLElement ):
 
 	def getNumberOfParents(self):
 		"Get the number of parents."
-		if self.parent == None:
-			return 0
-		return self.parent.getNumberOfParents() + 1
+		return 0 if self.parent is None else self.parent.getNumberOfParents() + 1
 
 
 class CSVSimpleParser( xml_simple_reader.XMLSimpleReader ):
@@ -139,7 +141,7 @@ class CSVSimpleParser( xml_simple_reader.XMLSimpleReader ):
 
 	def getNewCSVElement( self, leadingTabCount, lineStripped ):
 		"Get a new csv element."
-		if self.root != None and self.extraLeadingTabCount == None:
+		if self.root != None and self.extraLeadingTabCount is None:
 			self.extraLeadingTabCount = 1 - leadingTabCount
 		if self.extraLeadingTabCount != None:
 			leadingTabCount += self.extraLeadingTabCount
@@ -159,7 +161,7 @@ class CSVSimpleParser( xml_simple_reader.XMLSimpleReader ):
 		leadingTabCount = leadingPart.count('\t')
 		if lineStripped[ : len('_') ] == '_':
 			self.getNewCSVElement( leadingTabCount, lineStripped )
-			if self.root == None:
+			if self.root is None:
 				self.root = self.oldCSVElement
 				self.root.parser = self
 			return

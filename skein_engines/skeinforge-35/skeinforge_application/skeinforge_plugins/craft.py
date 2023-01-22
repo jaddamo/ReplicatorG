@@ -43,7 +43,7 @@ def addToCraftMenu( menu ):
 	directoryFolders = settings.getFolders(directoryPath)
 	pluginFileNames = skeinforge_craft.getPluginFileNames()
 	for pluginFileName in pluginFileNames:
-		pluginFolderName = pluginFileName + '_plugins'
+		pluginFolderName = f'{pluginFileName}_plugins'
 		pluginPath = os.path.join( directoryPath, pluginFileName )
 		if pluginFolderName in directoryFolders:
 			addSubmenus( menu, pluginFileName, os.path.join( directoryPath, pluginFolderName ), pluginPath )

@@ -526,7 +526,9 @@ class SkeinforgeRepository:
 		webSearch = settings.HelpPage().getFromNameAfterHTTP('members.axion.net/~enrique/search_web.html', 'Web', self )
 		webSearch.column += 4
 		versionText = archive.getFileText( archive.getVersionFileName() )
-		self.version = settings.LabelDisplay().getFromName('Version: ' + versionText, self )
+		self.version = settings.LabelDisplay().getFromName(
+			f'Version: {versionText}', self
+		)
 		settings.LabelDisplay().getFromName('', self )
 		importantFileNames = ['craft', 'profile']
 		getRadioPluginsAddPluginGroupFrame( getPluginsDirectoryPath(), importantFileNames, getPluginFileNames(), self )

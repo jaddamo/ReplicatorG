@@ -26,7 +26,7 @@ def getCubicPath(xmlElement):
 	"Get the cubic path."
 	end = evaluate.getVector3FromXMLElement(xmlElement)
 	previousXMLElement = xmlElement.getPreviousXMLElement()
-	if previousXMLElement == None:
+	if previousXMLElement is None:
 		print('Warning, can not get previousXMLElement in getCubicPath in cubic for:')
 		print(xmlElement)
 		return [end]
@@ -38,13 +38,13 @@ def getCubicPath(xmlElement):
 	controlPoint1 = evaluate.getVector3ByPrefix(None, 'controlPoint1', xmlElement)
 	if len(evaluatedControlPoints) == 1:
 		controlPoint1 = evaluatedControlPoints[0]
-	if controlPoint0 == None:
+	if controlPoint0 is None:
 		oldControlPoint = evaluate.getVector3ByPrefixes(['controlPoint','controlPoint1'], None, previousXMLElement)
-		if oldControlPoint == None:
+		if oldControlPoint is None:
 			oldControlPoints = evaluate.getTransformedPathByKey('controlPoints', previousXMLElement)
 			if len(oldControlPoints) > 0:
 				oldControlPoint = oldControlPoints[-1]
-		if oldControlPoint == None:
+		if oldControlPoint is None:
 			oldControlPoint = end
 		controlPoint0 = begin + begin - oldControlPoint
 	return getCubicPathByBeginEnd(begin, [controlPoint0, controlPoint1], end, xmlElement)

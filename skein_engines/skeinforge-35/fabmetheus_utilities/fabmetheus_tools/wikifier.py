@@ -32,12 +32,12 @@ class Heading:
 
 	def getFromLine( self, headingLineTable, line ):
 		"Get the heading from a line."
-		headingTag = 'h' + str( self.depth + 2 )
-		nextLine = '\n<hr>\n'
-		if self.depth > 0:
-			nextLine = '\n'
+		headingTag = f'h{str(self.depth + 2)}'
+		nextLine = '\n' if self.depth > 0 else '\n<hr>\n'
 		self.name = line.replace('=', '').replace('<br>', '')
-		headingLineTable[ line ] = '<a name="%s" id="%s"></a><%s>%s</%s>%s' % ( self.name, self.name, headingTag, self.name, headingTag, nextLine )
+		headingLineTable[
+			line
+		] = f'<a name="{self.name}" id="{self.name}"></a><{headingTag}>{self.name}</{headingTag}>{nextLine}'
 		return self
 
 
@@ -77,7 +77,7 @@ def getNavigationHypertext( fileText, transferredFileNameIndex, transferredFileN
 	previousIndex = transferredFileNameIndex - 1
 	if previousIndex >= 0:
 		previousFileName = transferredFileNames[ previousIndex ]
-	previousLinkText = '<a href="%s">Previous</a>' % previousFileName
+	previousLinkText = f'<a href="{previousFileName}">Previous</a>'
 	navigationLine = getNavigationLine('<a href="contents.html">Contents</a>', previousLinkText, getNextLinkText( transferredFileNames, transferredFileNameIndex + 1 ) )
 	helpText = navigationLine + helpText + '<br />\n<br />\n' + navigationLine + '<hr>\n'
 	return fileText[ : helpTextStart ] + helpText + fileText[ helpTextEnd : ]
@@ -91,7 +91,7 @@ def getNextLinkText( hypertextFiles, nextIndex ):
 	nextFileName = 'contents.html'
 	if nextIndex < len( hypertextFiles ):
 		nextFileName = hypertextFiles[ nextIndex ]
-	return '<a href="%s">Next</a>' % nextFileName
+	return f'<a href="{nextFileName}">Next</a>'
 
 def getWrappedHypertext( fileText, hypertextFileIndex, hypertextFiles ):
 	"Get the wrapped pydoc hypertext help."
@@ -108,7 +108,7 @@ def getWrappedHypertext( fileText, hypertextFileIndex, hypertextFiles ):
 def readWriteDeleteHypertextHelp( documentDirectoryPath, hypertextFileIndex, hypertextFiles, transferredFileNames ):
 	"Read the pydoc hypertext help documents, write them in the documentation folder then delete the originals."
 	fileName = os.path.basename(hypertextFiles[ hypertextFileIndex ])
-	print('readWriteDeleteHypertextHelp ' + fileName)
+	print(f'readWriteDeleteHypertextHelp {fileName}')
 	filePath = os.path.join( documentDirectoryPath, fileName )
 	fileText = archive.getFileText(fileName)
 	fileText = getWrappedHypertext( fileText, hypertextFileIndex, hypertextFiles )
@@ -121,7 +121,7 @@ def readWriteDeleteHypertextHelp( documentDirectoryPath, hypertextFileIndex, hyp
 def readWriteNavigationHelp( documentDirectoryPath, transferredFileNameIndex, transferredFileNames ):
 	"Read the hypertext help documents, and add the navigation lines to them."
 	fileName = os.path.basename(transferredFileNames[ transferredFileNameIndex ])
-	print('readWriteNavigationHelp ' + fileName)
+	print(f'readWriteNavigationHelp {fileName}')
 	filePath = os.path.join( documentDirectoryPath, fileName )
 	fileText = archive.getFileText(filePath)
 	fileText = getNavigationHypertext( fileText, transferredFileNameIndex, transferredFileNames )
@@ -170,20 +170,22 @@ def writeHypertext():
 		return
 	documentDirectoryPath = archive.getAbsoluteFolderPath( hypertextFiles[0], 'documentation')
 	removeFilesInDirectory( documentDirectoryPath )
-	sortedReplaceFiles = []
-	for hypertextFile in hypertextFiles:
-		sortedReplaceFiles.append( hypertextFile.replace('.html', '. html') )
+	sortedReplaceFiles = [
+		hypertextFile.replace('.html', '. html')
+		for hypertextFile in hypertextFiles
+	]
 	sortedReplaceFiles.sort()
-	hypertextFiles = []
-	for sortedReplaceFile in sortedReplaceFiles:
-		hypertextFiles.append( sortedReplaceFile.replace('. html', '.html') )
+	hypertextFiles = [
+		sortedReplaceFile.replace('. html', '.html')
+		for sortedReplaceFile in sortedReplaceFiles
+	]
 	transferredFileNames = []
 	for hypertextFileIndex in xrange( len( hypertextFiles ) ):
 		readWriteDeleteHypertextHelp( documentDirectoryPath, hypertextFileIndex, hypertextFiles, transferredFileNames )
 	for transferredFileNameIndex in xrange( len( transferredFileNames ) ):
 		readWriteNavigationHelp( documentDirectoryPath, transferredFileNameIndex, transferredFileNames )
 	writeContentsFile( documentDirectoryPath, transferredFileNames )
-	print('%s files were wrapped.' % len( transferredFileNames ) )
+	print(f'{len(transferredFileNames)} files were wrapped.')
 
 
 def main():

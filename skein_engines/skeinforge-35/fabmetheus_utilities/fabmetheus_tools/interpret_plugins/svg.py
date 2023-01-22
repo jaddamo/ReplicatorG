@@ -98,7 +98,7 @@ class SVGCarving:
 
 	def parseInitialization(self):
 		'Parse gcode initialization and store the parameters.'
-		if self.svgReader.sliceDictionary == None:
+		if self.svgReader.sliceDictionary is None:
 			return
 		self.layerThickness = euclidean.getFloatDefaultByDictionary( self.layerThickness, self.svgReader.sliceDictionary, 'layerThickness')
 		self.maximumZ = euclidean.getFloatDefaultByDictionary( self.maximumZ, self.svgReader.sliceDictionary, 'maxZ')
@@ -117,7 +117,6 @@ class SVGCarving:
 
 	def setCarveBridgeLayerThickness( self, bridgeLayerThickness ):
 		"Set the bridge layer thickness.  If the infill is not in the direction of the bridge, the bridge layer thickness should be given as None or not set at all."
-		pass
 
 	def setCarveLayerThickness( self, layerThickness ):
 		"Set the layer thickness."
@@ -125,8 +124,6 @@ class SVGCarving:
 
 	def setCarveImportRadius( self, importRadius ):
 		"Set the import radius."
-		pass
 
 	def setCarveIsCorrectMesh( self, isCorrectMesh ):
 		"Set the is correct mesh flag."
-		pass

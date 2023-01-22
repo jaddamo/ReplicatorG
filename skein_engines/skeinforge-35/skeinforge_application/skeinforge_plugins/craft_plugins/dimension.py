@@ -103,11 +103,13 @@ def getCraftedTextFromText(gcodeText, repository=None):
 	"Dimension a gcode text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'dimension'):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( DimensionRepository() )
-	if not repository.activateDimension.value:
-		return gcodeText
-	return DimensionSkein().getCraftedGcode(gcodeText, repository)
+	return (
+		DimensionSkein().getCraftedGcode(gcodeText, repository)
+		if repository.activateDimension.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -167,7 +169,7 @@ class DimensionSkein:
 		self.repository = repository
 		self.lines = archive.getTextLines(gcodeText)
 		self.parseInitialization()
-		if self.operatingFlowRate == None:
+		if self.operatingFlowRate is None:
 			print('There is no operatingFlowRate so dimension will do nothing.')
 			return gcodeText
 		self.restartDistance = self.repository.retractionDistance.value + self.repository.restartExtraDistance.value
@@ -178,7 +180,7 @@ class DimensionSkein:
 
 	def getDimensionedArcMovement(self, line, splitLine):
 		"Get a dimensioned arc movement."
-		if self.oldLocation == None:
+		if self.oldLocation is None:
 			return line
 		relativeLocation = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
 		self.oldLocation += relativeLocation
@@ -194,7 +196,7 @@ class DimensionSkein:
 				distance = abs( location - self.oldLocation )
 			self.oldLocation = location
 		else:
-			if self.oldLocation == None:
+			if self.oldLocation is None:
 				print('Warning: There was no absolute location when the G91 command was parsed, so the absolute location will be set to the origin.')
 				self.oldLocation = Vector3()
 			location = gcodec.getLocationFromSplitLine(None, splitLine)
@@ -214,9 +216,9 @@ class DimensionSkein:
 	def getExtrusionDistanceStringFromExtrusionDistance( self, extrusionDistance ):
 		"Get the extrusion distance string from the extrusion distance."
 		if self.repository.relativeExtrusionDistance.value:
-			return ' E' + self.distanceFeedRate.getRounded( extrusionDistance )
+			return f' E{self.distanceFeedRate.getRounded(extrusionDistance)}'
 		self.totalExtrusionDistance += extrusionDistance
-		return ' E' + self.distanceFeedRate.getRounded( self.totalExtrusionDistance )
+		return f' E{self.distanceFeedRate.getRounded(self.totalExtrusionDistance)}'
 
 	def parseInitialization(self):
 		'Parse gcode initialization and store the parameters.'
@@ -242,11 +244,11 @@ class DimensionSkein:
 		if len(splitLine) < 1:
 			return
 		firstWord = splitLine[0]
-		if firstWord == 'G2' or firstWord == 'G3':
+		if firstWord in ['G2', 'G3']:
 			line = self.getDimensionedArcMovement( line, splitLine )
 		if firstWord == 'G1':
 			line = self.getDimensionedLinearMovement( line, splitLine )
-		if firstWord == 'G90':
+		elif firstWord == 'G90':
 			self.absoluteDistanceMode = True
 		elif firstWord == 'G91':
 			self.absoluteDistanceMode = False

@@ -35,7 +35,7 @@ def addGridRow(diameter, gridPath, loopsComplex, maximumComplex, rowIndex, x, y,
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get vector3 vertexes from attribute dictionary."
-	if derivation == None:
+	if derivation is None:
 		derivation = GridDerivation()
 		derivation.setToXMLElement(xmlElement)
 	diameter = derivation.radius + derivation.radius
@@ -55,7 +55,7 @@ def getGeometryOutput(derivation, xmlElement):
 		gridPath = getRandomGrid(derivation, diameter, loopsComplex, maximumComplex, minimumComplex, xmlElement)
 	elif typeStringTwoCharacters == 're' or typeStringFirstCharacter == 'e':
 		gridPath = getRectangularGrid(diameter, loopsComplex, maximumComplex, minimumComplex, derivation.zigzag)
-	if gridPath == None:
+	if gridPath is None:
 		print('Warning, the step type was not one of (hexagonal, random or rectangular) in getGeometryOutput in grid for:')
 		print(derivation.typeString)
 		print(xmlElement)

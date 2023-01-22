@@ -144,7 +144,7 @@ class Vector3:
 
 	def __repr__(self):
 		"Get the string representation of this Vector3."
-		return '%s, %s, %s' % ( self.x, self.y, self.z )
+		return f'{self.x}, {self.y}, {self.z}'
 
 	def __rdiv__(self, other):
 		"Get a new Vector3 by dividing each component of this one."
@@ -204,9 +204,7 @@ class Vector3:
 	def getNormalized(self, other):
 		"Get the normalized Vector3."
 		magnitude = abs(self)
-		if magnitude == 0.0:
-			return self.copy()
-		return self / magnitude
+		return self.copy() if magnitude == 0.0 else self / magnitude
 
 	def magnitudeSquared(self):
 		"Get the square of the magnitude of the Vector3."

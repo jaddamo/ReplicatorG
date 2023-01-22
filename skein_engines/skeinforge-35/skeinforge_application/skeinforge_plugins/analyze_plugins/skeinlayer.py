@@ -181,7 +181,7 @@ def getWindowAnalyzeFileGivenText( fileName, gcodeText, repository=None):
 	"Display a gcode file in a skeinlayer window given the text."
 	if gcodeText == '':
 		return None
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( SkeinlayerRepository() )
 	skeinWindow = getWindowGivenTextRepository( fileName, gcodeText, repository )
 	skeinWindow.updateDeiconify()
@@ -253,7 +253,7 @@ class SkeinlayerSkein:
 
 	def addToPath( self, line, location ):
 		"Add a point to travel and maybe extrusion."
-		if self.oldLocation == None:
+		if self.oldLocation is None:
 			return
 		colorName = 'gray'
 		locationComplex = location.dropAxis(2)
@@ -262,8 +262,10 @@ class SkeinlayerSkein:
 		end = self.getScreenCoordinates( locationComplex )
 		if self.extruderActive:
 			colorName = self.colorNames[ self.extrusionNumber % len( self.colorNames ) ]
-		displayString = '%s %s' % ( self.lineIndex + 1, line )
-		tagString = 'colored_line_index: %s %s' % ( len( self.skeinPane ), len( self.skeinPanes ) - 1 )
+		displayString = f'{self.lineIndex + 1} {line}'
+		tagString = (
+			f'colored_line_index: {len(self.skeinPane)} {len(self.skeinPanes) - 1}'
+		)
 		coloredLine = tableau.ColoredLine( begin, colorName, displayString, end, tagString )
 		coloredLine.isExtrusionThread = self.extruderActive
 		self.skeinPane.append( coloredLine )
@@ -287,7 +289,7 @@ class SkeinlayerSkein:
 		"Parse a gcode line and add it to the vector output."
 		if self.isThereALayerStartWord:
 			return firstWord == '(<layer>'
-		if firstWord != 'G1' and firstWord != 'G2' and firstWord != 'G3':
+		if firstWord not in ['G1', 'G2', 'G3']:
 			return False
 		location = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
 		if location.z - self.oldZ > 0.1:
@@ -382,7 +384,7 @@ class SkeinlayerSkein:
 			self.extrusionNumber += 1
 		elif firstWord == 'M103':
 			self.extruderActive = False
-		if firstWord == 'G2' or firstWord == 'G3':
+		if firstWord in ['G2', 'G3']:
 			relativeLocation = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
 			relativeLocation.z = 0.0
 			location = self.oldLocation + relativeLocation
@@ -415,8 +417,15 @@ class SkeinWindow( tableau.TableauWindow ):
 		self.createVerticalLine( 0.0, xPixel )
 		self.horizontalRulerCanvas.create_text( xPixel + 2, 0, anchor = settings.Tkinter.NW, text = self.getRoundedRulingText( 1, xMillimeters ) )
 		cumulativeDistance = xMillimeters
-		self.createVerticalLine( self.rulingExtentTiny, self.skein.getScreenCoordinates( complex( xMillimeters + self.separationWidthMillimetersTenth, 0.0 ) ).real )
-		for subRulingIndex in xrange( 4 ):
+		self.createVerticalLine(
+			self.rulingExtentTiny,
+			self.skein.getScreenCoordinates(
+				complex(
+					cumulativeDistance + self.separationWidthMillimetersTenth, 0.0
+				)
+			).real,
+		)
+		for _ in xrange( 4 ):
 			cumulativeDistance += self.separationWidthMillimetersFifth
 			self.createVerticalLine( self.rulingExtentShort, self.skein.getScreenCoordinates( complex( cumulativeDistance, 0.0 ) ).real )
 			self.createVerticalLine( self.rulingExtentTiny, self.skein.getScreenCoordinates( complex( cumulativeDistance + self.separationWidthMillimetersTenth, 0.0 ) ).real )
@@ -432,8 +441,15 @@ class SkeinWindow( tableau.TableauWindow ):
 		if roundedRulingText.find('.') != - 1:
 			effectiveRulingTextLength -= 1
 		cumulativeDistance = yMillimeters
-		self.createHorizontalLine( self.rulingExtentTiny, self.skein.getScreenCoordinates( complex( 0.0, yMillimeters + self.separationWidthMillimetersTenth ) ).imag )
-		for subRulingIndex in xrange( 4 ):
+		self.createHorizontalLine(
+			self.rulingExtentTiny,
+			self.skein.getScreenCoordinates(
+				complex(
+					0.0, cumulativeDistance + self.separationWidthMillimetersTenth
+				)
+			).imag,
+		)
+		for _ in xrange( 4 ):
 			cumulativeDistance += self.separationWidthMillimetersFifth
 			self.createHorizontalLine( self.rulingExtentShort, self.skein.getScreenCoordinates( complex( 0.0, cumulativeDistance ) ).imag )
 			self.createHorizontalLine( self.rulingExtentTiny, self.skein.getScreenCoordinates( complex( 0.0, cumulativeDistance + self.separationWidthMillimetersTenth ) ).imag )

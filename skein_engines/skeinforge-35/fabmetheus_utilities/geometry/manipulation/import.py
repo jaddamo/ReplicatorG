@@ -27,7 +27,7 @@ __license__ = 'GPL 3.0'
 def getXMLFromCarvingFileName(fileName):
 	"Get xml text from xml text."
 	carving = fabmetheus_interpret.getCarving(fileName)
-	if carving == None:
+	if carving is None:
 		return ''
 	output = cStringIO.StringIO()
 	carving.addXML( 0, output )
@@ -36,7 +36,7 @@ def getXMLFromCarvingFileName(fileName):
 def processXMLElement(xmlElement):
 	"Process the xml element."
 	fileName = evaluate.getEvaluatedValue('file', xmlElement )
-	if fileName == None:
+	if fileName is None:
 		return
 	parserFileName = xmlElement.getRoot().parser.fileName
 	absoluteFileName = archive.getAbsoluteFolderPath( parserFileName, fileName )
@@ -46,7 +46,9 @@ def processXMLElement(xmlElement):
 	else:
 		xmlText = getXMLFromCarvingFileName( absoluteFileName )
 	if xmlText == '':
-		print('The file %s could not be found in the folder which the fabmetheus xml file is in.' % fileName )
+		print(
+			f'The file {fileName} could not be found in the folder which the fabmetheus xml file is in.'
+		)
 		return
 	if '_importname' in xmlElement.attributeDictionary:
 		xmlElement.importName = xmlElement.attributeDictionary['_importname']

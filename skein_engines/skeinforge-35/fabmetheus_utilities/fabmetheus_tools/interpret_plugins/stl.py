@@ -52,18 +52,21 @@ def addFacesGivenBinary( stlData, triangleMesh, vertexIndexTable ):
 	vertexes = []
 	for vertexIndex in xrange( numberOfVertexes ):
 		byteIndex = 84 + vertexIndex * 50
-		vertexes.append( getVertexGivenBinary( byteIndex + 12, stlData ) )
-		vertexes.append( getVertexGivenBinary( byteIndex + 24, stlData ) )
-		vertexes.append( getVertexGivenBinary( byteIndex + 36, stlData ) )
+		vertexes.extend(
+			(
+				getVertexGivenBinary(byteIndex + 12, stlData),
+				getVertexGivenBinary(byteIndex + 24, stlData),
+				getVertexGivenBinary(byteIndex + 36, stlData),
+			)
+		)
 	addFacesGivenVertexes( triangleMesh, vertexIndexTable, vertexes )
 
 def addFacesGivenText( stlText, triangleMesh, vertexIndexTable ):
 	"Add faces given stl text."
 	lines = archive.getTextLines( stlText )
-	vertexes = []
-	for line in lines:
-		if line.find('vertex') != - 1:
-			vertexes.append( getVertexGivenLine(line) )
+	vertexes = [
+		getVertexGivenLine(line) for line in lines if line.find('vertex') != -1
+	]
 	addFacesGivenVertexes( triangleMesh, vertexIndexTable, vertexes )
 
 def addFacesGivenVertexes( triangleMesh, vertexIndexTable, vertexes ):

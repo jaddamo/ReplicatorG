@@ -126,7 +126,7 @@ def getCarving(fileName=''):
 	xmlParser = XMLSimpleReader( fileName, None, xmlText )
 	lowerClassName = xmlParser.getRoot().className.lower()
 	pluginModule = archive.getModuleWithDirectoryPath( getPluginsDirectoryPath(), lowerClassName )
-	if pluginModule == None:
+	if pluginModule is None:
 		return None
 	return pluginModule.getCarvingFromParser( xmlParser )
 

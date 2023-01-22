@@ -70,13 +70,14 @@ class ScalableVectorGraphicsRepository:
 		self.boxN = boundingBox[1]
 		boxWidth = boundingBox[2] - self.boxW
 		boxHeight = boundingBox[3] - self.boxN
-		print('Exported svg file saved as ' + svgFileName )
+		print(f'Exported svg file saved as {svgFileName}')
 		svgTemplateText = archive.getFileTextInFileDirectory( settings.__file__, os.path.join('templates', 'canvas_template.svg') )
 		output = cStringIO.StringIO()
 		lines = archive.getTextLines( svgTemplateText )
-		firstWordTable = {}
-		firstWordTable['height="999px"'] = '		height="%spx"' % int( round( boxHeight ) )
-		firstWordTable['<!--replaceLineWith_coloredLines-->'] = self.getCanvasLinesOutput()
+		firstWordTable = {
+			'height="999px"': '		height="%spx"' % int(round(boxHeight)),
+			'<!--replaceLineWith_coloredLines-->': self.getCanvasLinesOutput(),
+		}
 		firstWordTable['replaceLineWithTitle'] = archive.getSummarizedFileName( self.fileName )
 		firstWordTable['width="999px"'] = '		width="%spx"' % int( round( boxWidth ) )
 		for line in lines:
@@ -89,26 +90,34 @@ class ScalableVectorGraphicsRepository:
 		if svgViewer == 'webbrowser':
 			settings.openWebPage( svgFileName )
 			return
-		svgFilePath = '"' + os.path.normpath( svgFileName ) + '"' # " to send in file name with spaces
-		shellCommand = svgViewer + ' ' + svgFilePath
+		svgFilePath = f'"{os.path.normpath(svgFileName)}"'
+		shellCommand = f'{svgViewer} {svgFilePath}'
 		print('')
 		if fileExtension == '':
 			print('Sending the shell command:')
 			print( shellCommand )
 			commandResult = os.system( shellCommand )
 			if commandResult != 0:
-				print('It may be that the system could not find the %s program.' % svgViewer )
-				print('If so, try installing the %s program or look for another svg viewer, like Netscape which can be found at:' % svgViewer )
+				print(f'It may be that the system could not find the {svgViewer} program.')
+				print(
+					f'If so, try installing the {svgViewer} program or look for another svg viewer, like Netscape which can be found at:'
+				)
 				print('http://www.netscape.org/')
 			return
-		convertedFileName = archive.getFilePathWithUnderscoredBasename( svgFilePath, '.' + fileExtension + '"')
-		shellCommand += ' ' + convertedFileName
+		convertedFileName = archive.getFilePathWithUnderscoredBasename(
+			svgFilePath, f'.{fileExtension}"'
+		)
+		shellCommand += f' {convertedFileName}'
 		print('Sending the shell command:')
 		print( shellCommand )
 		commandResult = os.system( shellCommand )
 		if commandResult != 0:
-			print('The %s program could not convert the svg to the %s file format.' % ( svgViewer, fileExtension ) )
-			print('Try installing the %s program or look for another one, like Image Magick which can be found at:' % svgViewer )
+			print(
+				f'The {svgViewer} program could not convert the svg to the {fileExtension} file format.'
+			)
+			print(
+				f'Try installing the {svgViewer} program or look for another one, like Image Magick which can be found at:'
+			)
 			print('http://www.imagemagick.org/script/index.php')
 
 	def getCanvasLinesOutput(self):
@@ -125,7 +134,7 @@ class ScalableVectorGraphicsRepository:
 		self.canvas = canvas
 		self.executeTitle = 'Convert to Scalable Vector Graphics'
 		self.fileName = fileName
-		self.suffix = suffix + '.svg'
+		self.suffix = f'{suffix}.svg'
 
 
 def main():

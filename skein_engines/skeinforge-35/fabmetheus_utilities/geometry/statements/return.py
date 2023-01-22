@@ -23,7 +23,7 @@ def processXMLElement(xmlElement):
 		return
 	function = functions[-1]
 	function.shouldReturn = True
-	if xmlElement.object == None:
+	if xmlElement.object is None:
 		if 'return' in xmlElement.attributeDictionary:
 			value = xmlElement.attributeDictionary['return']
 			xmlElement.object = evaluate.getEvaluatorSplitWords(value)

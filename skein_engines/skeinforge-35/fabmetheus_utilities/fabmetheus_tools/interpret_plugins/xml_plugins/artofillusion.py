@@ -77,15 +77,17 @@ def getCarvableObject(globalObject, object, xmlElement):
 def getTransformXMLElement( coords, transformName ):
 	"Get the transform attributes."
 	transformXMLElement = coords.getFirstChildWithClassName( transformName )
-	if len( transformXMLElement.attributeDictionary ) < 16:
-		if 'bf:ref' in transformXMLElement.attributeDictionary:
-			idReference = transformXMLElement.attributeDictionary['bf:ref']
-			return coords.getRoot().getSubChildWithID( idReference )
+	if (
+		len(transformXMLElement.attributeDictionary) < 16
+		and 'bf:ref' in transformXMLElement.attributeDictionary
+	):
+		idReference = transformXMLElement.attributeDictionary['bf:ref']
+		return coords.getRoot().getSubChildWithID( idReference )
 	return transformXMLElement
 
 def processXMLElement( archivableObjects, parent, xmlElement ):
 	"Add the object info if it is carvable."
-	if xmlElement == None:
+	if xmlElement is None:
 		return
 	object = xmlElement.getFirstChildWithClassName('object')
 	if 'bf:type' not in object.attributeDictionary:

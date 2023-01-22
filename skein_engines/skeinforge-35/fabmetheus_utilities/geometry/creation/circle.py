@@ -22,7 +22,7 @@ __license__ = 'GPL 3.0'
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get vector3 vertexes from attribute dictionary."
-	if derivation == None:
+	if derivation is None:
 		derivation = CircleDerivation()
 		derivation.setToXMLElement(xmlElement)
 	loop = []
@@ -30,7 +30,7 @@ def getGeometryOutput(derivation, xmlElement):
 	sidesCeiling = int(math.ceil(abs(derivation.sides) * derivation.extent / 360.0))
 	sideAngle = math.radians(derivation.extent) / sidesCeiling
 	spiral = lineation.Spiral(derivation.spiral, 0.5 * sideAngle / math.pi)
-	for side in xrange(sidesCeiling + (derivation.extent != 360.0)):
+	for _ in xrange(sidesCeiling + (derivation.extent != 360.0)):
 		unitPolar = euclidean.getWiddershinsUnitPolar(angleTotal)
 		vertex = spiral.getSpiralPoint(unitPolar, Vector3(unitPolar.real * derivation.radius.real, unitPolar.imag * derivation.radius.imag))
 		angleTotal += sideAngle
@@ -48,9 +48,7 @@ def getWrappedFloat(floatValue, modulo):
 	"Get wrapped float."
 	if floatValue >= modulo:
 		return modulo
-	if floatValue >= 0:
-		return floatValue
-	return floatValue % modulo
+	return floatValue if floatValue >= 0 else floatValue % modulo
 
 def processXMLElement(xmlElement):
 	"Process the xml element."
@@ -74,7 +72,7 @@ class CircleDerivation:
 	def setToXMLElement(self, xmlElement):
 		"Set to the xmlElement."
 		self.radius = lineation.getRadiusComplex(self.radius, xmlElement)
-		if self.sides == None:
+		if self.sides is None:
 			radiusMaximum = max(self.radius.real, self.radius.imag)
 			self.sides = evaluate.getSidesMinimumThreeBasedOnPrecisionSides(radiusMaximum, xmlElement)
 		self.start = evaluate.getEvaluatedFloatDefault(self.start, 'start', xmlElement)

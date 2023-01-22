@@ -46,12 +46,12 @@ class StringAttribute:
 
 	def delete(self, arguments):
 		'Get the delete string.'
-		deleteString = ''
 		enumeratorSet = set(euclidean.getEnumeratorKeysAlwaysList(self.stringObject, arguments))
-		for characterIndex, character in enumerate(self.stringObject):
-			if characterIndex not in enumeratorSet:
-				deleteString += character
-		return deleteString
+		return ''.join(
+			character
+			for characterIndex, character in enumerate(self.stringObject)
+			if characterIndex not in enumeratorSet
+		)
 
 	def get(self, itemIndex):
 		'Get value by characterIndex'
@@ -63,7 +63,7 @@ class StringAttribute:
 
 	def getIsNotIn(self, value):
 		'Determine if the value is in.'
-		return not(value in self.stringObject)
+		return value not in self.stringObject
 
 	def getLength(self):
 		'Get the length.'
@@ -110,10 +110,7 @@ class StringAttribute:
 
 	def values(self):
 		'Get the values.'
-		values = []
-		for character in self.stringObject:
-			values.append(character)
-		return values
+		return list(self.stringObject)
 
 
 globalAccessibleAttributes = 'append copy delete get getIsIn getIsNotIn getLength getMax getMin'.split()

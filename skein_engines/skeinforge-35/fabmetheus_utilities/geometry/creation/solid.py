@@ -23,7 +23,7 @@ __license__ = 'GPL 3.0'
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get geometry output from paths."
-	if derivation == None:
+	if derivation is None:
 		derivation = SolidDerivation()
 		derivation.setToXMLElement(xmlElement)
 	geometryOutput = []
@@ -70,7 +70,7 @@ def processXMLElementByFunction(manipulationFunction, xmlElement):
 
 def processXMLElementByGeometry(geometryOutput, xmlElement):
 	"Process the xml element by geometryOutput."
-	if geometryOutput == None:
+	if geometryOutput is None:
 		return
 	xmlProcessor = xmlElement.getXMLProcessor()
 	xmlProcessor.convertXMLElement(geometryOutput, xmlElement)

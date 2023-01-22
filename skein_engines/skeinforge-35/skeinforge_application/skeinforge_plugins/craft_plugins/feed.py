@@ -87,11 +87,13 @@ def getCraftedTextFromText(gcodeText, repository=None):
 	"Feed a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty(gcodeText, 'feed'):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository(FeedRepository())
-	if not repository.activateFeed.value:
-		return gcodeText
-	return FeedSkein().getCraftedGcode(gcodeText, repository)
+	return (
+		FeedSkein().getCraftedGcode(gcodeText, repository)
+		if repository.activateFeed.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -149,9 +151,11 @@ class FeedSkein:
 		"Get gcode line with feed rate."
 		location = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
 		self.oldLocation = location
-		feedRateMinute = 60.0 * self.feedRatePerSecond
-		if not self.isExtruderActive:
-			feedRateMinute = self.travelFeedRatePerMinute
+		feedRateMinute = (
+			60.0 * self.feedRatePerSecond
+			if self.isExtruderActive
+			else self.travelFeedRatePerMinute
+		)
 		return self.distanceFeedRate.getLineWithFeedRate(feedRateMinute, line, splitLine)
 
 	def parseInitialization(self):

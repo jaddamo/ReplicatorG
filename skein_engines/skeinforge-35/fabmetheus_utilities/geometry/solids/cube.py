@@ -51,7 +51,6 @@ class Cube( trianglemesh.TriangleMesh ):
 	"A cube object."
 	def addXMLSection(self, depth, output):
 		"Add the xml section for this object."
-		pass
 
 	def createShape(self):
 		"Create the shape."

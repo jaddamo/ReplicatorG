@@ -48,10 +48,7 @@ def getElementsPath(subName=''):
 
 def getEndsWithList(word, wordEndings):
 	'Determine if the word ends with a list.'
-	for wordEnding in wordEndings:
-		if word.endswith(wordEnding):
-			return True
-	return False
+	return any(word.endswith(wordEnding) for wordEnding in wordEndings)
 
 def getFabmetheusPath(subName=''):
 	'Get the fabmetheus directory path.'
@@ -68,10 +65,9 @@ def getFilePaths(fileInDirectory=''):
 		directoryName = os.path.dirname(fileInDirectory)
 	absoluteDirectoryPath = os.path.abspath(directoryName)
 	directory = os.listdir(directoryName)
-	filePaths = []
-	for fileName in directory:
-		filePaths.append(os.path.join(absoluteDirectoryPath, fileName))
-	return filePaths
+	return [
+		os.path.join(absoluteDirectoryPath, fileName) for fileName in directory
+	]
 
 def getFilePathsRecursively(fileInDirectory=''):
 	'Get the file paths in the directory of the file in directory.'
@@ -94,13 +90,12 @@ def getFilePathWithUnderscoredBasename(fileName, suffix):
 def getFileText(fileName, readMode = 'r', printWarning=True):
 	'Get the entire text of a file.'
 	try:
-		file = open(fileName, readMode)
-		fileText = file.read()
-		file.close()
+		with open(fileName, readMode) as file:
+			fileText = file.read()
 		return fileText
 	except IOError:
 		if printWarning:
-			print('The file ' + fileName + ' does not exist.')
+			print(f'The file {fileName} does not exist.')
 		return ''
 
 def getFileTextInFileDirectory(fileInDirectory, fileName, readMode='r'):
@@ -112,9 +107,11 @@ def getFilesWithFileTypesWithoutWords(fileTypes, words = [], fileInDirectory='')
 	'Get files which have a given file type, but with do not contain a word in a list.'
 	filesWithFileTypes = []
 	for filePath in getFilePaths(fileInDirectory):
-		for fileType in fileTypes:
-			if isFileWithFileTypeWithoutWords(fileType, filePath, words):
-				filesWithFileTypes.append(filePath)
+		filesWithFileTypes.extend(
+			filePath
+			for fileType in fileTypes
+			if isFileWithFileTypeWithoutWords(fileType, filePath, words)
+		)
 	filesWithFileTypes.sort()
 	return filesWithFileTypes
 
@@ -122,18 +119,21 @@ def getFilesWithFileTypesWithoutWordsRecursively(fileTypes, words = [], fileInDi
 	'Get files recursively which have a given file type, but with do not contain a word in a list.'
 	filesWithFileTypesRecursively = []
 	for filePath in getFilePathsRecursively(fileInDirectory):
-		for fileType in fileTypes:
-			if isFileWithFileTypeWithoutWords(fileType, filePath, words):
-				filesWithFileTypesRecursively.append(filePath)
+		filesWithFileTypesRecursively.extend(
+			filePath
+			for fileType in fileTypes
+			if isFileWithFileTypeWithoutWords(fileType, filePath, words)
+		)
 	filesWithFileTypesRecursively.sort()
 	return filesWithFileTypesRecursively
 
 def getFilesWithFileTypeWithoutWords(fileType, words = [], fileInDirectory=''):
 	'Get files which have a given file type, but with do not contain a word in a list.'
-	filesWithFileType = []
-	for filePath in getFilePaths(fileInDirectory):
-		if isFileWithFileTypeWithoutWords(fileType, filePath, words):
-			filesWithFileType.append(filePath)
+	filesWithFileType = [
+		filePath
+		for filePath in getFilePaths(fileInDirectory)
+		if isFileWithFileTypeWithoutWords(fileType, filePath, words)
+	]
 	filesWithFileType.sort()
 	return filesWithFileType
 
@@ -164,9 +164,7 @@ def getGeometryUtilitiesPath(subName=''):
 
 def getJoinedPath(path, subName=''):
 	'Get the joined file path.'
-	if subName == '':
-		return path
-	return os.path.join(path, subName)
+	return path if subName == '' else os.path.join(path, subName)
 
 def getModuleWithDirectoryPath(directoryPath, fileName):
 	'Get the module from the fileName and folder name.'
@@ -185,8 +183,10 @@ def getModuleWithDirectoryPath(directoryPath, fileName):
 		print('Exception traceback in getModuleWithDirectoryPath in archive:')
 		traceback.print_exc(file=sys.stdout)
 		print('')
-		print('That error means; could not import a module with the fileName ' + fileName)
-		print('and an absolute directory name of ' + directoryPath)
+		print(
+			f'That error means; could not import a module with the fileName {fileName}'
+		)
+		print(f'and an absolute directory name of {directoryPath}')
 		print('')
 	return None
 
@@ -215,23 +215,22 @@ def getPythonDirectoryNames(directoryName):
 	directory = os.listdir(directoryName)
 	for fileName in directory:
 		subdirectoryName = os.path.join(directoryName, fileName)
-		if os.path.isdir(subdirectoryName):
-			if os.path.isfile(os.path.join(subdirectoryName, '__init__.py')):
-				pythonDirectoryNames.append(subdirectoryName)
+		if os.path.isdir(subdirectoryName) and os.path.isfile(
+			os.path.join(subdirectoryName, '__init__.py')
+		):
+			pythonDirectoryNames.append(subdirectoryName)
 	return pythonDirectoryNames
 
 def getPythonDirectoryNamesRecursively(directoryName=''):
 	'Get the python directories recursively.'
-	recursivePythonDirectoryNames = []
 	if directoryName == '':
 		directoryName = os.getcwd()
-	if os.path.isfile(os.path.join(directoryName, '__init__.py')):
-		recursivePythonDirectoryNames.append(directoryName)
-		pythonDirectoryNames = getPythonDirectoryNames(directoryName)
-		for pythonDirectoryName in pythonDirectoryNames:
-			recursivePythonDirectoryNames += getPythonDirectoryNamesRecursively(pythonDirectoryName)
-	else:
+	if not os.path.isfile(os.path.join(directoryName, '__init__.py')):
 		return []
+	recursivePythonDirectoryNames = [directoryName]
+	pythonDirectoryNames = getPythonDirectoryNames(directoryName)
+	for pythonDirectoryName in pythonDirectoryNames:
+		recursivePythonDirectoryNames += getPythonDirectoryNamesRecursively(pythonDirectoryName)
 	return recursivePythonDirectoryNames
 
 def getPythonFileNamesExceptInit(fileInDirectory=''):
@@ -273,9 +272,7 @@ def getSkeinforgePath(subName=''):
 
 def getTextIfEmpty(fileName, text):
 	'Get the text from a file if it the text is empty.'
-	if text != '':
-		return text
-	return getFileText(fileName)
+	return text if text != '' else getFileText(fileName)
 
 def getTextLines(text):
 	'Get the all the lines of text of a text.'
@@ -284,9 +281,7 @@ def getTextLines(text):
 def getUntilDot(text):
 	'Get the text until the last dot, if any.'
 	dotIndex = text.rfind('.')
-	if dotIndex < 0:
-		return text
-	return text[: dotIndex]
+	return text if dotIndex < 0 else text[: dotIndex]
 
 def getVersionFileName():
 	'Get the file name of the version date.'
@@ -295,13 +290,12 @@ def getVersionFileName():
 def isFileWithFileTypeWithoutWords(fileType, fileName, words):
 	'Determine if file has a given file type, but with does not contain a word in a list.'
 	fileName = os.path.basename(fileName)
-	fileTypeDot = '.' + fileType
-	if not fileName.endswith(fileTypeDot):
-		return False
-	for word in words:
-		if fileName.find(word) >= 0:
-			return False
-	return True
+	fileTypeDot = f'.{fileType}'
+	return (
+		all(fileName.find(word) < 0 for word in words)
+		if fileName.endswith(fileTypeDot)
+		else False
+	)
 
 def makeDirectory(directory):
 	'Make a directory if it does not already exist.'
@@ -310,11 +304,15 @@ def makeDirectory(directory):
 	try:
 		os.makedirs(directory)
 	except OSError:
-		print('Skeinforge can not make the directory %s so give it read/write permission for that directory and the containing directory.' % directory)
+		print(
+			f'Skeinforge can not make the directory {directory} so give it read/write permission for that directory and the containing directory.'
+		)
 
 def removeBackupFilesByType(fileType):
 	'Remove backup files by type.'
-	backupFilePaths = getFilesWithFileTypesWithoutWordsRecursively([fileType + '~'])
+	backupFilePaths = getFilesWithFileTypesWithoutWordsRecursively(
+		[f'{fileType}~']
+	)
 	for backupFilePath in backupFilePaths:
 		os.remove(backupFilePath)
 
@@ -332,8 +330,7 @@ def writeFileMessageEnd(end, fileName, fileText, message):
 def writeFileText(fileName, fileText, writeMode='w+'):
 	'Write a text to a file.'
 	try:
-		file = open(fileName, writeMode)
-		file.write(fileText)
-		file.close()
+		with open(fileName, writeMode) as file:
+			file.write(fileText)
 	except IOError:
-		print('The file ' + fileName + ' can not be written to.')
+		print(f'The file {fileName} can not be written to.')

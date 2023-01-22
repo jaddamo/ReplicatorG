@@ -91,13 +91,13 @@ class Path(dictionary.Dictionary):
 
 	def getTransformedPaths(self):
 		"Get all transformed paths."
-		if self.xmlElement == None:
+		if self.xmlElement is None:
 			return dictionary.getAllPaths([self.vertexes], self)
 		chainTetragrid = self.getMatrixChainTetragrid()
 		if self.oldChainTetragrid != chainTetragrid:
 			self.oldChainTetragrid = chainTetragrid
 			self.transformedPath = None
-		if self.transformedPath == None:
+		if self.transformedPath is None:
 			self.transformedPath = matrix.getTransformedVector3s(chainTetragrid, self.vertexes)
 		if len(self.transformedPath) > 0:
 			return dictionary.getAllTransformedPaths([self.transformedPath], self)
@@ -170,7 +170,6 @@ class SVGFabricationCarving:
 
 	def setCarveBridgeLayerThickness( self, bridgeLayerThickness ):
 		"Set the bridge layer thickness.  If the infill is not in the direction of the bridge, the bridge layer thickness should be given as None or not set at all."
-		pass
 
 	def setCarveLayerThickness( self, layerThickness ):
 		"Set the layer thickness."
@@ -178,8 +177,6 @@ class SVGFabricationCarving:
 
 	def setCarveImportRadius( self, importRadius ):
 		"Set the import radius."
-		pass
 
 	def setCarveIsCorrectMesh( self, isCorrectMesh ):
 		"Set the is correct mesh flag."
-		pass

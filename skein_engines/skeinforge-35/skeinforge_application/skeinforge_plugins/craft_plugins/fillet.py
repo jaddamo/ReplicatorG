@@ -108,7 +108,7 @@ def getCraftedTextFromText( gcodeText, repository = None ):
 	"Fillet a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'fillet'):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( FilletRepository() )
 	if not repository.activateFillet.value:
 		return gcodeText
@@ -153,9 +153,11 @@ class BevelSkein:
 	def getCornerFeedRate(self):
 		"Get the corner feed rate, which may be based on the intermediate feed rate."
 		feedRateMinute = self.feedRateMinute
-		if self.repository.useIntermediateFeedRateInCorners.value:
-			if self.oldFeedRateMinute != None:
-				feedRateMinute = 0.5 * ( self.oldFeedRateMinute + self.feedRateMinute )
+		if (
+			self.repository.useIntermediateFeedRateInCorners.value
+			and self.oldFeedRateMinute != None
+		):
+			feedRateMinute = 0.5 * ( self.oldFeedRateMinute + self.feedRateMinute )
 		return feedRateMinute * self.cornerFeedRateOverOperatingFeedRate
 
 	def getCraftedGcode( self, repository, gcodeText ):
@@ -201,8 +203,7 @@ class BevelSkein:
 			line = self.lines[ afterIndex ]
 			splitLine = gcodec.getSplitLineBeforeBracketSemicolon(line)
 			if gcodec.getFirstWord(splitLine) == 'G1':
-				nextLocation = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
-				return nextLocation
+				return gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
 		return None
 
 	def linearMove( self, splitLine ):
@@ -287,7 +288,7 @@ class ArcSegmentSkein( BevelSkein ):
 #		steps = int( math.ceil( absoluteDifferenceAngle * 1.5 ) )
 		steps = int( math.ceil( min( absoluteDifferenceAngle * 1.5, absoluteDifferenceAngle * abs( beforeCenterSegment ) / self.curveSection ) ) )
 		stepPlaneAngle = euclidean.getWiddershinsUnitPolar( afterCenterDifferenceAngle / steps )
-		for step in xrange( 1, steps ):
+		for _ in xrange( 1, steps ):
 			beforeCenterSegment = euclidean.getRoundZAxisByPlaneAngle( stepPlaneAngle, beforeCenterSegment )
 			arcPoint = center + beforeCenterSegment
 			self.addLinearMovePoint( self.getCornerFeedRate(), arcPoint )
@@ -346,9 +347,7 @@ class ArcPointSkein( ArcSegmentSkein ):
 			return
 		afterPointMinusBefore = afterPoint - beforePoint
 		centerMinusBefore = center - beforePoint
-		firstWord = 'G3'
-		if afterCenterDifferenceAngle < 0.0:
-			firstWord = 'G2'
+		firstWord = 'G2' if afterCenterDifferenceAngle < 0.0 else 'G3'
 		centerMinusBeforeComplex = centerMinusBefore.dropAxis(2)
 		if abs( centerMinusBeforeComplex ) <= 0.0:
 			return
@@ -360,12 +359,12 @@ class ArcPointSkein( ArcSegmentSkein ):
 		line = self.distanceFeedRate.getFirstWordMovement( firstWord, afterPointMinusBefore ) + self.getRelativeCenter( centerMinusBeforeComplex )
 		cornerFeedRate = self.getCornerFeedRate()
 		if cornerFeedRate != None:
-			line += ' F' + self.distanceFeedRate.getRounded(cornerFeedRate)
+			line += f' F{self.distanceFeedRate.getRounded(cornerFeedRate)}'
 		self.distanceFeedRate.addLine(line)
 
 	def getRelativeCenter( self, centerMinusBeforeComplex ):
 		"Get the relative center."
-		return ' I%s J%s' % ( self.distanceFeedRate.getRounded( centerMinusBeforeComplex.real ), self.distanceFeedRate.getRounded( centerMinusBeforeComplex.imag ) )
+		return f' I{self.distanceFeedRate.getRounded(centerMinusBeforeComplex.real)} J{self.distanceFeedRate.getRounded(centerMinusBeforeComplex.imag)}'
 
 
 class ArcRadiusSkein( ArcPointSkein ):
@@ -373,7 +372,7 @@ class ArcRadiusSkein( ArcPointSkein ):
 	def getRelativeCenter( self, centerMinusBeforeComplex ):
 		"Get the relative center."
 		radius = abs( centerMinusBeforeComplex )
-		return ' R' + ( self.distanceFeedRate.getRounded(radius) )
+		return f' R{self.distanceFeedRate.getRounded(radius)}'
 
 
 class FilletRepository:

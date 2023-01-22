@@ -82,11 +82,13 @@ def getCraftedTextFromText( gcodeText, hopRepository = None ):
 	"Hop a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'hop'):
 		return gcodeText
-	if hopRepository == None:
+	if hopRepository is None:
 		hopRepository = settings.getReadRepository( HopRepository() )
-	if not hopRepository.activateHop.value:
-		return gcodeText
-	return HopSkein().getCraftedGcode( gcodeText, hopRepository )
+	return (
+		HopSkein().getCraftedGcode(gcodeText, hopRepository)
+		if hopRepository.activateHop.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -156,9 +158,8 @@ class HopSkein:
 		if self.justDeactivated:
 			oldLocationComplex = self.oldLocation.dropAxis(2)
 			distance = abs( locationComplex - oldLocationComplex )
-			if distance < self.minimumDistance:
-				if self.isNextTravel():
-					return self.distanceFeedRate.getLineWithZ( line, splitLine, highestZHop )
+			if distance < self.minimumDistance and self.isNextTravel():
+				return self.distanceFeedRate.getLineWithZ( line, splitLine, highestZHop )
 			alongRatio = min( 0.41666666, self.hopDistance / distance )
 			oneMinusAlong = 1.0 - alongRatio
 			closeLocation = oldLocationComplex * oneMinusAlong + locationComplex * alongRatio

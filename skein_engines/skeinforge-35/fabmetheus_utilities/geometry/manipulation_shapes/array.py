@@ -24,20 +24,18 @@ globalExecutionOrder = 200
 
 def getManipulatedPaths(close, loop, prefix, sideLength, xmlElement):
 	"Get array path."
-	arrayPaths = evaluate.getTransformedPathsByKey([prefix + 'path', prefix + 'paths'], xmlElement)
+	arrayPaths = evaluate.getTransformedPathsByKey(
+		[f'{prefix}path', f'{prefix}paths'], xmlElement
+	)
 	manipulatedByPaths = []
 	for arrayPath in arrayPaths:
 		for arrayPoint in arrayPath:
-			manipulatedByPath = []
-			for point in loop:
-				manipulatedByPath.append(point + arrayPoint)
+			manipulatedByPath = [point + arrayPoint for point in loop]
 			manipulatedByPaths.append(manipulatedByPath)
 	manipulatedByVertexes = []
-	vertexes = getVertexesByKey(prefix + 'vertexes', xmlElement)
+	vertexes = getVertexesByKey(f'{prefix}vertexes', xmlElement)
 	for vertex in vertexes:
-		manipulatedByVertex = []
-		for point in loop:
-			manipulatedByVertex.append(point + vertex)
+		manipulatedByVertex = [point + vertex for point in loop]
 		manipulatedByVertexes.append(manipulatedByVertex)
 	manipulatedPaths = manipulatedByPaths + manipulatedByVertexes
 	if len(manipulatedPaths) == 0:
@@ -53,7 +51,7 @@ def getVertexesByKey(key, xmlElement):
 def processXMLElement(xmlElement):
 	"Process the xml element."
 	target = evaluate.getXMLElementByKey('target', xmlElement)
-	if target == None:
+	if target is None:
 		print('Warning, array could not get target for:')
 		print(xmlElement)
 		return

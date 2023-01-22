@@ -142,9 +142,9 @@ def getCraftedText( fileName, gcodeText = '', repository=None):
 		if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'carve'):
 			return gcodeText
 	carving = svg_writer.getCarving(fileName)
-	if carving == None:
+	if carving is None:
 		return ''
-	if repository == None:
+	if repository is None:
 		repository = CarveRepository()
 		settings.getReadRepository(repository)
 	return CarveSkein().getCarvedSVG( carving, fileName, repository )
@@ -156,7 +156,7 @@ def getNewRepository():
 def writeOutput(fileName=''):
 	"Carve a GNU Triangulated Surface file."
 	startTime = time.time()
-	print('File ' + archive.getSummarizedFileName(fileName) + ' is being carved.')
+	print(f'File {archive.getSummarizedFileName(fileName)} is being carved.')
 	repository = CarveRepository()
 	settings.getReadRepository(repository)
 	carveGcode = getCraftedText( fileName, '', repository )
@@ -164,8 +164,12 @@ def writeOutput(fileName=''):
 		return
 	suffixFileName = archive.getFilePathWithUnderscoredBasename( fileName, '_carve.svg')
 	archive.writeFileText( suffixFileName, carveGcode )
-	print('The carved file is saved as ' + archive.getSummarizedFileName(suffixFileName) )
-	print('It took %s to carve the file.' % euclidean.getDurationString( time.time() - startTime ) )
+	print(
+		f'The carved file is saved as {archive.getSummarizedFileName(suffixFileName)}'
+	)
+	print(
+		f'It took {euclidean.getDurationString(time.time() - startTime)} to carve the file.'
+	)
 	settings.openSVGPage( suffixFileName, repository.svgViewer.value )
 
 

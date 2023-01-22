@@ -77,7 +77,7 @@ class ProfileMenuRadio:
 		self.activate = False
 		self.menu = menu
 		self.name = name
-		self.profileJoinName = profilePluginFileName + '.& /' + name
+		self.profileJoinName = f'{profilePluginFileName}.& /{name}'
 		self.profilePluginFileName = profilePluginFileName
 		self.radioVar = radioVar
 		menu.add_radiobutton( label = name.replace('_', ' '), command = self.clickRadio, value = self.profileJoinName, variable = self.radioVar )

@@ -78,11 +78,13 @@ def getCraftedTextFromText( gcodeText, homeRepository = None ):
 	"Home a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'home'):
 		return gcodeText
-	if homeRepository == None:
+	if homeRepository is None:
 		homeRepository = settings.getReadRepository( HomeRepository() )
-	if not homeRepository.activateHome.value:
-		return gcodeText
-	return HomeSkein().getCraftedGcode( gcodeText, homeRepository )
+	return (
+		HomeSkein().getCraftedGcode(gcodeText, homeRepository)
+		if homeRepository.activateHome.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -147,7 +149,7 @@ class HomeSkein:
 		if not self.shouldHome:
 			return
 		self.shouldHome = False
-		if self.oldLocation == None:
+		if self.oldLocation is None:
 			return
 		if self.extruderActive:
 			self.distanceFeedRate.addLine('M103')

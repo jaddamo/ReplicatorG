@@ -81,24 +81,20 @@ class Dictionary:
 
 	def addXMLInnerSection(self, depth, output):
 		"Add xml section for this object."
-		pass
 
 	def createShape(self):
 		"Create the shape."
-		pass
 
 	def getAttributeDictionary(self):
 		"Get attribute table."
-		if self.xmlElement == None:
-			return {}
-		return self.xmlElement.attributeDictionary
+		return {} if self.xmlElement is None else self.xmlElement.attributeDictionary
 
 	def getComplexTransformedPathLists(self):
 		"Get complex transformed path lists."
-		complexTransformedPathLists = []
-		for archivableObject in self.archivableObjects:
-			complexTransformedPathLists.append(euclidean.getComplexPaths(archivableObject.getTransformedPaths()))
-		return complexTransformedPathLists
+		return [
+			euclidean.getComplexPaths(archivableObject.getTransformedPaths())
+			for archivableObject in self.archivableObjects
+		]
 
 	def getFabricationExtension(self):
 		"Get fabrication extension."
@@ -149,4 +145,3 @@ class Dictionary:
 
 	def setToObjectAttributeDictionary(self):
 		"Set the shape of this carvable object info."
-		pass

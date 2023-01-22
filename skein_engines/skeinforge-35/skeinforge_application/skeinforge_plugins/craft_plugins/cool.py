@@ -120,11 +120,13 @@ def getCraftedTextFromText( gcodeText, coolRepository = None ):
 	"Cool a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'cool'):
 		return gcodeText
-	if coolRepository == None:
+	if coolRepository is None:
 		coolRepository = settings.getReadRepository( CoolRepository() )
-	if not coolRepository.activateCool.value:
-		return gcodeText
-	return CoolSkein().getCraftedGcode( gcodeText, coolRepository )
+	return (
+		CoolSkein().getCraftedGcode(gcodeText, coolRepository)
+		if coolRepository.activateCool.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -216,7 +218,7 @@ class CoolSkein:
 		if flowRateString == self.oldFlowRateString:
 			return
 		if flowRateString != None:
-			self.distanceFeedRate.addLine('M108 S' + flowRateString )
+			self.distanceFeedRate.addLine(f'M108 S{flowRateString}')
 		self.oldFlowRateString = flowRateString
 
 	def addFlowRateMultipliedLineIfNecessary( self, flowRate ):
@@ -235,7 +237,9 @@ class CoolSkein:
 
 	def addTemperature( self, temperature ):
 		"Add a line of temperature."
-		self.distanceFeedRate.addLine('M104 S' + euclidean.getRoundedToThreePlaces( temperature ) ) 
+		self.distanceFeedRate.addLine(
+			f'M104 S{euclidean.getRoundedToThreePlaces(temperature)}'
+		) 
 
 	def getCoolMove(self, line, location, splitLine):
 		"Add line to time spent on layer."

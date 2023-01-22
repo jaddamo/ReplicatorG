@@ -73,7 +73,7 @@ class Paraminator:
 		return self.start + self.increment*i
 
 	def getCommand(self, i, prefs):
-		return "python skeinforge.py --prefdir=%s test-objects/%s.stl" % (prefs, chr(97+i)) 
+		return f"python skeinforge.py --prefdir={prefs} test-objects/{chr(97 + i)}.stl" 
 
 	def tweakFile(self, prefsFile, param):
 		for line in fileinput.input(prefsFile, inplace=1):
@@ -92,7 +92,7 @@ class Paraminator:
 		shutil.copytree(self.prefsDir, tempDir)
 
 		#edit our prefs in place.
-		tempPrefs = "%s/%s" % (tempDir, os.path.basename(self.prefsFile))
+		tempPrefs = f"{tempDir}/{os.path.basename(self.prefsFile)}"
 		self.tweakFile(tempPrefs, self.getParameter(i))
 
 		#generate our gcode file
@@ -100,15 +100,14 @@ class Paraminator:
 		os.system(command)
 
 		#add it to our main file
-		singleFile = "test-objects/%s.gcode" % (chr(97+i))
+		singleFile = f"test-objects/{chr(97 + i)}.gcode"
 		#os.system("cat %s >> %s" % (singleFile, self.output))
 		#os.remove(singleFile)
 		infile = open(singleFile)
 		contents = infile.read()
-		outfile = open(self.output, 'a')
-		outfile.write(contents)
-		outfile.write(os.linesep)
-		outfile.close()
+		with open(self.output, 'a') as outfile:
+			outfile.write(contents)
+			outfile.write(os.linesep)
 		
 		
 	def generate(self):
@@ -119,23 +118,23 @@ class Paraminator:
 			shutil.rmtree("temp")
 		os.mkdir("temp")
 
-		#create our output 
-		fpOut = open(self.output, 'w')
-		fpOut.write("(--------- PARAMINATOR v1.0 ---------)\n")
-		fpOut.write("(Automated test of the '%s' parameter // File: %s)\n" % (self.parameter, self.prefsFile))
-		fpOut.write("(Values from %.2f to %.2f in increments of %.2f)\n" % (self.start, self.end, self.increment))
-		fpOut.write("(Total object count is %d)\n" % (self.rows))
-		fpOut.write("(Command: %s)\n" % (" ".join(sys.argv)))
-		fpOut.write("(After you run the script, use the reference below to determine the parameter for each object.)\n")
-		for i in range(self.rows):
+		with open(self.output, 'w') as fpOut:
+			fpOut.write("(--------- PARAMINATOR v1.0 ---------)\n")
+			fpOut.write("(Automated test of the '%s' parameter // File: %s)\n" % (self.parameter, self.prefsFile))
+			fpOut.write("(Values from %.2f to %.2f in increments of %.2f)\n" % (self.start, self.end, self.increment))
+			fpOut.write("(Total object count is %d)\n" % (self.rows))
+			fpOut.write("(Command: %s)\n" % (" ".join(sys.argv)))
+			fpOut.write("(After you run the script, use the reference below to determine the parameter for each object.)\n")
+			for i in range(self.rows):
+				fpOut.write("(%s = %.2f)\n" % (chr(65+i), self.getParameter(i)))
 			fpOut.write("(%s = %.2f)\n" % (chr(65+i), self.getParameter(i)))
 		fpOut.close()
-		
+
 		for i in range(self.rows):
 			print "Generating object %d of %d" % (i+1, self.rows)
 			self.generateObject(i)
-			
-		print "GCode Complete.  File located at %s" % (self.output)
+
+		"Generate the actual GCode"
 
 def main(argv):
 	

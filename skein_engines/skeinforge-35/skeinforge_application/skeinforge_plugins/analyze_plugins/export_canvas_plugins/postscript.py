@@ -50,32 +50,42 @@ class PostscriptRepository:
 		boxN = boundingBox[1]
 		boxWidth = boundingBox[2] - boxW
 		boxHeight = boundingBox[3] - boxN
-		print('Exported postscript file saved as ' + postscriptFileName )
+		print(f'Exported postscript file saved as {postscriptFileName}')
 		self.canvas.postscript( file = postscriptFileName, height = boxHeight, width = boxWidth, pageheight = boxHeight, pagewidth = boxWidth, x = boxW, y = boxN )
 		fileExtension = self.fileExtension.value
 		postscriptProgram = self.postscriptProgram.value
 		if postscriptProgram == '':
 			return
-		postscriptFilePath = '"' + os.path.normpath( postscriptFileName ) + '"' # " to send in file name with spaces
-		shellCommand = postscriptProgram + ' ' + postscriptFilePath
+		postscriptFilePath = f'"{os.path.normpath(postscriptFileName)}"'
+		shellCommand = f'{postscriptProgram} {postscriptFilePath}'
 		print('')
 		if fileExtension == '':
 			print('Sending the shell command:')
 			print( shellCommand )
 			commandResult = os.system( shellCommand )
 			if commandResult != 0:
-				print('It may be that the system could not find the %s program.' % postscriptProgram )
-				print('If so, try installing the %s program or look for another one, like the Gnu Image Manipulation Program (Gimp) which can be found at:' % postscriptProgram )
+				print(
+					f'It may be that the system could not find the {postscriptProgram} program.'
+				)
+				print(
+					f'If so, try installing the {postscriptProgram} program or look for another one, like the Gnu Image Manipulation Program (Gimp) which can be found at:'
+				)
 				print('http://www.gimp.org/')
 			return
-		convertedFileName = archive.getFilePathWithUnderscoredBasename( postscriptFilePath, '.' + fileExtension + '"')
-		shellCommand += ' ' + convertedFileName
+		convertedFileName = archive.getFilePathWithUnderscoredBasename(
+			postscriptFilePath, f'.{fileExtension}"'
+		)
+		shellCommand += f' {convertedFileName}'
 		print('Sending the shell command:')
 		print( shellCommand )
 		commandResult = os.system( shellCommand )
 		if commandResult != 0:
-			print('The %s program could not convert the postscript to the %s file format.' % ( postscriptProgram, fileExtension ) )
-			print('Try installing the %s program or look for another one, like Image Magick which can be found at:' % postscriptProgram )
+			print(
+				f'The {postscriptProgram} program could not convert the postscript to the {fileExtension} file format.'
+			)
+			print(
+				f'Try installing the {postscriptProgram} program or look for another one, like Image Magick which can be found at:'
+			)
 			print('http://www.imagemagick.org/script/index.php')
 
 	def setCanvasFileNameSuffix( self, canvas, fileName, suffix ):
@@ -83,7 +93,7 @@ class PostscriptRepository:
 		self.canvas = canvas
 		self.executeTitle = 'Export to Postscript'
 		self.fileName = fileName
-		self.suffix = suffix + '.ps'
+		self.suffix = f'{suffix}.ps'
 
 
 def main():

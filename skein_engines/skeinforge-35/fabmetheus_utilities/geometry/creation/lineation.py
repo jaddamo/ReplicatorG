@@ -38,7 +38,7 @@ def getComplexByDictionaryListValue(value, valueComplex):
 	if value.__class__ == list:
 		return getComplexByFloatList(value, valueComplex)
 	floatFromValue = euclidean.getFloatFromValue(value)
-	if floatFromValue ==  None:
+	if floatFromValue is None:
 		return valueComplex
 	return complex( floatFromValue, floatFromValue )
 
@@ -71,10 +71,10 @@ def getComplexByPrefix( prefix, valueComplex, xmlElement ):
 	value = evaluate.getEvaluatedValue(prefix, xmlElement)
 	if value != None:
 		valueComplex = getComplexByDictionaryListValue(value, valueComplex)
-	x = evaluate.getEvaluatedFloat(prefix + '.x', xmlElement)
+	x = evaluate.getEvaluatedFloat(f'{prefix}.x', xmlElement)
 	if x != None:
 		valueComplex = complex( x, getComplexIfNone( valueComplex ).imag )
-	y = evaluate.getEvaluatedFloat(prefix + '.y', xmlElement)
+	y = evaluate.getEvaluatedFloat(f'{prefix}.y', xmlElement)
 	if y != None:
 		valueComplex = complex( getComplexIfNone( valueComplex ).real, y )
 	return valueComplex
@@ -95,9 +95,7 @@ def getComplexByPrefixes( prefixes, valueComplex, xmlElement ):
 
 def getComplexIfNone( valueComplex ):
 	"Get new complex if the original complex is none."
-	if valueComplex == None:
-		return complex()
-	return valueComplex
+	return complex() if valueComplex is None else valueComplex
 
 def getFloatByPrefixBeginEnd(prefixBegin, prefixEnd, valueFloat, xmlElement):
 	"Get float from prefixBegin, prefixEnd and xml element."
@@ -110,11 +108,15 @@ def getFloatByPrefixBeginEnd(prefixBegin, prefixEnd, valueFloat, xmlElement):
 def getFloatByPrefixSide( prefix, side, xmlElement ):
 	"Get float by prefix and side."
 	floatByDenominatorPrefix = evaluate.getEvaluatedFloatDefault(0.0, prefix, xmlElement)
-	return floatByDenominatorPrefix + evaluate.getEvaluatedFloatDefault(0.0,  prefix + 'OverSide', xmlElement ) * side
+	return (
+		floatByDenominatorPrefix
+		+ evaluate.getEvaluatedFloatDefault(0.0, f'{prefix}OverSide', xmlElement)
+		* side
+	)
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get geometry output from paths."
-	if derivation == None:
+	if derivation is None:
 		derivation = LineationDerivation()
 		derivation.setToXMLElement(xmlElement)
 	geometryOutput = []
@@ -178,14 +180,22 @@ def getPackedGeometryOutputByLoop(sideLoop, xmlElement):
 
 def getRadiusByPrefix(prefix, sideLength, xmlElement):
 	"Get radius by prefix."
-	radius = getFloatByPrefixSide(prefix + 'radius', sideLength, xmlElement)
-	radius += 0.5 * getFloatByPrefixSide(prefix + 'diameter', sideLength, xmlElement)
-	return radius + 0.5 * getFloatByPrefixSide(prefix + 'size', sideLength, xmlElement)
+	radius = getFloatByPrefixSide(f'{prefix}radius', sideLength, xmlElement)
+	radius += 0.5 * getFloatByPrefixSide(
+		f'{prefix}diameter', sideLength, xmlElement
+	)
+	return radius + 0.5 * getFloatByPrefixSide(
+		f'{prefix}size', sideLength, xmlElement
+	)
 
 def getStrokeRadiusByPrefix(prefix, xmlElement):
 	"Get strokeRadius by prefix."
-	strokeRadius = getFloatByPrefixBeginEnd(prefix + 'strokeRadius', prefix + 'strokeWidth', 1.0, xmlElement )
-	return getFloatByPrefixBeginEnd(prefix + 'radius', prefix + 'diameter', strokeRadius, xmlElement )
+	strokeRadius = getFloatByPrefixBeginEnd(
+		f'{prefix}strokeRadius', f'{prefix}strokeWidth', 1.0, xmlElement
+	)
+	return getFloatByPrefixBeginEnd(
+		f'{prefix}radius', f'{prefix}diameter', strokeRadius, xmlElement
+	)
 
 def getUnpackedLoops(loops):
 	"Get unpacked loops."
@@ -199,9 +209,7 @@ def getWrappedInteger( integer, modulo ):
 	"Get wrapped integer."
 	if integer >= modulo:
 		return modulo
-	if integer >= 0:
-		return integer
-	return integer % modulo
+	return integer if integer >= 0 else integer % modulo
 
 def processXMLElement(xmlElement):
 	"Process the xml element."
@@ -214,7 +222,7 @@ def processXMLElementByFunction(manipulationFunction, xmlElement):
 
 def processXMLElementByGeometry(geometryOutput, xmlElement):
 	"Process the xml element by geometryOutput."
-	if geometryOutput == None:
+	if geometryOutput is None:
 		return
 	geometryOutput = evaluate.getVector3ListsRecursively(geometryOutput)
 	if 'target' in xmlElement.attributeDictionary and not evaluate.getEvaluatedBooleanDefault(False, 'copy', xmlElement):
@@ -222,13 +230,13 @@ def processXMLElementByGeometry(geometryOutput, xmlElement):
 		if target.__class__.__name__ == 'XMLElement':
 			target.removeChildrenFromIDNameParent()
 			xmlElement = target
-			if xmlElement.object != None:
-				if xmlElement.parent.object != None:
-					if xmlElement.object in xmlElement.parent.object.archivableObjects:
-						xmlElement.parent.object.archivableObjects.remove(xmlElement.object)
-	firstElement = None
-	if len(geometryOutput) > 0:
-		firstElement = geometryOutput[0]
+			if (
+				xmlElement.object != None
+				and xmlElement.parent.object != None
+				and xmlElement.object in xmlElement.parent.object.archivableObjects
+			):
+				xmlElement.parent.object.archivableObjects.remove(xmlElement.object)
+	firstElement = geometryOutput[0] if len(geometryOutput) > 0 else None
 	if firstElement.__class__ == list:
 		if len(firstElement) > 1:
 			path.convertXMLElementRenameByPaths(geometryOutput, xmlElement)
@@ -263,13 +271,13 @@ class SideLoop:
 	"Class to handle loop, side angle and side length."
 	def __init__(self, loop, sideAngle=None, sideLength=None):
 		"Initialize."
-		if sideAngle == None:
+		if sideAngle is None:
 			if len(loop) > 0:
 				sideAngle = 2.0 * math.pi / float(len(loop))
 			else:
 				sideAngle = 1.0
 				print('Warning, loop has no sides in SideLoop in lineation.')
-		if sideLength == None:
+		if sideLength is None:
 			if len(loop) > 0:
 				sideLength = euclidean.getLoopLength(loop) / float(len(loop))
 			else:
@@ -291,7 +299,7 @@ class SideLoop:
 		loops = [self.loop]
 		for matchingPlugin in matchingPlugins:
 			matchingLoops = []
-			prefix = matchingPlugin.__name__ + '.'
+			prefix = f'{matchingPlugin.__name__}.'
 			for loop in loops:
 				matchingLoops += matchingPlugin.getManipulatedPaths(self.close, loop, prefix, self.sideLength, xmlElement)
 			loops = matchingLoops
@@ -318,7 +326,7 @@ class Spiral:
 	def __init__(self, spiral, stepRatio):
 		"Initialize."
 		self.spiral = spiral
-		if self.spiral == None:
+		if self.spiral is None:
 			return
 		self.spiralIncrement = self.spiral * stepRatio
 		self.spiralTotal = Vector3()
@@ -329,7 +337,7 @@ class Spiral:
 
 	def getSpiralPoint(self, unitPolar, vector3):
 		"Add spiral to the vector."
-		if self.spiral == None:
+		if self.spiral is None:
 			return vector3
 		vector3 += Vector3(unitPolar.real * self.spiralTotal.x, unitPolar.imag * self.spiralTotal.y, self.spiralTotal.z)
 		self.spiralTotal += self.spiralIncrement

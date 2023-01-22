@@ -107,11 +107,13 @@ def getCraftedTextFromText(gcodeText, repository=None):
 	"Mill a gcode linear move gcodeText."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'mill'):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( MillRepository() )
-	if not repository.activateMill.value:
-		return gcodeText
-	return MillSkein().getCraftedGcode(gcodeText, repository)
+	return (
+		MillSkein().getCraftedGcode(gcodeText, repository)
+		if repository.activateMill.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -119,18 +121,12 @@ def getNewRepository():
 
 def getPointsFromSegmentTable( segmentTable ):
 	"Get the points from the segment table."
-	points = []
 	endpoints = euclidean.getEndpointsFromSegmentTable( segmentTable )
-	for endpoint in endpoints:
-		points.append( endpoint.point )
-	return points
+	return [endpoint.point for endpoint in endpoints]
 
 def isPointOfTableInLoop( loop, pointTable ):
 	"Determine if a point in the point table is in the loop."
-	for point in loop:
-		if point in pointTable:
-			return True
-	return False
+	return any(point in pointTable for point in loop)
 
 def writeOutput(fileName=''):
 	"Mill a gcode linear move file."
@@ -205,7 +201,7 @@ class MillSkein:
 
 	def addGcodeFromLoops( self, loops, z ):
 		"Add gcode from loops."
-		if self.oldLocation == None:
+		if self.oldLocation is None:
 			self.oldLocation = Vector3()
 		self.oldLocation.z = z
 		for loop in loops:
@@ -246,9 +242,7 @@ class MillSkein:
 		betweenPoints += getPointsFromSegmentTable( boundaryLayer.verticalSegmentTable )
 		innerPoints = getPointsFromSegmentTable( innerHorizontalSegmentTable )
 		innerPoints += getPointsFromSegmentTable( innerVerticalSegmentTable )
-		innerPointTable = {}
-		for innerPoint in innerPoints:
-			innerPointTable[ innerPoint ] = None
+		innerPointTable = {innerPoint: None for innerPoint in innerPoints}
 		boundaryLayer.innerLoops = []
 		boundaryLayer.outerLoops = []
 		millRadius = 0.75 * self.millWidth
@@ -315,7 +309,7 @@ class MillSkein:
 				boundaryLoop = None
 			elif firstWord == '(<boundaryPoint>':
 				location = gcodec.getLocationFromSplitLine(None, splitLine)
-				if boundaryLoop == None:
+				if boundaryLoop is None:
 					boundaryLoop = []
 					boundaryLayer.loops.append( boundaryLoop )
 				boundaryLoop.append( location.dropAxis(2) )

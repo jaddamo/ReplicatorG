@@ -21,7 +21,7 @@ __license__ = 'GPL 3.0'
 def processXMLElement(xmlElement):
 	"Process the xml element."
 	target = evaluate.getXMLElementByKey('target', xmlElement )
-	if target == None:
+	if target is None:
 		print('Warning, copy could not get target.')
 		return
 	translateDictionary = xmlElement.attributeDictionary.copy()

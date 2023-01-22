@@ -39,7 +39,7 @@ def addLoop(derivation, endMultiplier, loopLists, path, portionDirectionIndex, p
 	scale = derivation.interpolationDictionary['scale'].getComplexByPortion( portionDirection )
 	twist = derivation.interpolationDictionary['twist'].getYByPortion( portionDirection )
 	projectiveSpace = euclidean.ProjectiveSpace()
-	if derivation.tiltTop == None:
+	if derivation.tiltTop is None:
 		tilt = derivation.interpolationDictionary['tilt'].getComplexByPortion( portionDirection )
 		projectiveSpace = projectiveSpace.getByTilt( tilt )
 	else:
@@ -69,8 +69,8 @@ def addLoop(derivation, endMultiplier, loopLists, path, portionDirectionIndex, p
 def addNegatives(derivation, negatives, paths):
 	"Add pillars output to negatives."
 	portionDirections = getSpacedPortionDirections(derivation.interpolationDictionary)
+	endMultiplier = 1.000001
 	for path in paths:
-		endMultiplier = 1.000001
 		loopLists = getLoopListsByPath(derivation, endMultiplier, path, portionDirections)
 		geometryOutput = trianglemesh.getPillarsOutput(loopLists)
 		negatives.append(geometryOutput)
@@ -84,7 +84,7 @@ def addNegativesPositives(derivation, negatives, paths, positives):
 			endMultiplier = 1.000001
 		loopLists = getLoopListsByPath(derivation, endMultiplier, path, portionDirections)
 		geometryOutput = trianglemesh.getPillarsOutput(loopLists)
-		if endMultiplier == None:
+		if endMultiplier is None:
 			positives.append(geometryOutput)
 		else:
 			negatives.append(geometryOutput)
@@ -133,7 +133,7 @@ def comparePortionDirection( portionDirection, otherPortionDirection ):
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get triangle mesh from attribute dictionary."
-	if derivation == None:
+	if derivation is None:
 		derivation = ExtrudeDerivation()
 		derivation.setToXMLElement(xmlElement)
 	if derivation.radius != complex():
@@ -142,7 +142,7 @@ def getGeometryOutput(derivation, xmlElement):
 		loop = []
 		sideAngle = 2.0 * math.pi / sides
 		angleTotal = 0.0
-		for side in xrange(sides):
+		for _ in xrange(sides):
 			point = euclidean.getWiddershinsUnitPolar(angleTotal)
 			loop.append(Vector3(point.real * derivation.radius.real, point.imag * derivation.radius.imag))
 			angleTotal += sideAngle
@@ -272,7 +272,7 @@ class ExtrudeDerivation:
 
 	def __repr__(self):
 		"Get the string representation of this ExtrudeDerivation."
-		return '%s, %s' % ( self.interpolationDictionary, self.tiltTop )
+		return f'{self.interpolationDictionary}, {self.tiltTop}'
 
 	def setToXMLElement(self, xmlElement):
 		"Set to the xmlElement."
@@ -283,7 +283,7 @@ class ExtrudeDerivation:
 		self.interpolationDictionary['scale'] = Interpolation().getByPrefixZ(self.scalePathDefault, 'scale', xmlElement)
 		if len(self.target) < 1:
 			self.target = evaluate.getTransformedPathsByKey('target', xmlElement)
-		if self.tiltTop == None:
+		if self.tiltTop is None:
 			self.interpolationDictionary['offset'] = Interpolation().getByPrefixZ(self.offsetPathDefault, '', xmlElement)
 			self.interpolationDictionary['tilt'] = Interpolation().getByPrefixZ(self.tiltPathDefault, 'tilt', xmlElement)
 			for point in self.interpolationDictionary['tilt'].path:
@@ -323,7 +323,7 @@ class Interpolation:
 		if len(path) < 2:
 			print('Warning, path is too small in evaluate in Interpolation.')
 			return
-		if xmlElement == None:
+		if xmlElement is None:
 			self.path = path
 		else:
 			self.path = evaluate.getTransformedPathByPrefix(path, prefix, xmlElement)
@@ -340,13 +340,12 @@ class Interpolation:
 		if len(path) < 2:
 			print('Warning, path is too small in evaluate in Interpolation.')
 			return
-		if xmlElement == None:
+		if xmlElement is None:
 			self.path = path
 		else:
 			self.path = evaluate.getTransformedPathByPrefix(path, prefix, xmlElement)
 		self.distances = []
-		for point in self.path:
-			self.distances.append(point.x)
+		self.distances.extend(point.x for point in self.path)
 		return self.getByDistances()
 
 	def getByPrefixZ(self, path, prefix, xmlElement):
@@ -354,22 +353,19 @@ class Interpolation:
 		if len(path) < 2:
 			print('Warning, path is too small in evaluate in Interpolation.')
 			return
-		if xmlElement == None:
+		if xmlElement is None:
 			self.path = path
 		else:
 			self.path = evaluate.getTransformedPathByPrefix(path, prefix, xmlElement)
 		self.distances = []
-		for point in self.path:
-			self.distances.append(point.z)
+		self.distances.extend(point.z for point in self.path)
 		return self.getByDistances()
 
 	def getComparison( self, first, second ):
 		"Compare the first with the second."
 		if abs( second - first ) < self.close:
 			return 0
-		if second > first:
-			return 1
-		return - 1
+		return 1 if second > first else - 1
 
 	def getComplexByPortion( self, portionDirection ):
 		"Get complex from z portion."
@@ -397,7 +393,7 @@ class Interpolation:
 	def setInterpolationIndex( self, portionDirection ):
 		"Set the interpolation index."
 		self.absolutePortion = self.distances[0] + self.interpolationLength * portionDirection.portion
-		interpolationIndexes = range( 0, len( self.distances ) - 1 )
+		interpolationIndexes = range(len( self.distances ) - 1)
 		if portionDirection.directionReversed:
 			interpolationIndexes.reverse()
 		for self.interpolationIndex in interpolationIndexes:
@@ -424,4 +420,4 @@ class PortionDirection:
 
 	def __repr__(self):
 		"Get the string representation of this PortionDirection."
-		return '%s: %s' % ( self.portion, self.directionReversed )
+		return f'{self.portion}: {self.directionReversed}'

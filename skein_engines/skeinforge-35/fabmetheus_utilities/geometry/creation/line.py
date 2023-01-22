@@ -22,7 +22,7 @@ __license__ = 'GPL 3.0'
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get vector3 vertexes from attribute dictionary."
-	if derivation == None:
+	if derivation is None:
 		derivation = LineDerivation()
 		derivation.setToXMLElement(xmlElement)
 	endMinusStart = derivation.end - derivation.start
@@ -35,14 +35,14 @@ def getGeometryOutput(derivation, xmlElement):
 		return None
 	typeStringTwoCharacters = derivation.typeString.lower()[: 2]
 	xmlElement.attributeDictionary['closed'] = str(derivation.closed)
-	if derivation.step == None and derivation.steps == None:
+	if derivation.step is None and derivation.steps is None:
 		return lineation.getGeometryOutputByLoop(lineation.SideLoop([derivation.start, derivation.end]), xmlElement)
 	loop = [derivation.start]
 	if derivation.step != None and derivation.steps != None:
 		stepVector = derivation.step / endMinusStartLength * endMinusStart
 		derivation.end = derivation.start + stepVector * derivation.steps
 		return getGeometryOutputByStep(derivation.end, loop, derivation.steps, stepVector, xmlElement)
-	if derivation.step == None:
+	if derivation.step is None:
 		stepVector = endMinusStart / derivation.steps
 		return getGeometryOutputByStep(derivation.end, loop, derivation.steps, stepVector, xmlElement)
 	endMinusStartLengthOverStep = endMinusStartLength / derivation.step

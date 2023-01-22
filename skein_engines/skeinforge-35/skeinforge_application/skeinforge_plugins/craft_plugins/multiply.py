@@ -101,11 +101,13 @@ def getCraftedTextFromText( gcodeText, multiplyRepository = None ):
 	"Multiply the fill text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'multiply'):
 		return gcodeText
-	if multiplyRepository == None:
+	if multiplyRepository is None:
 		multiplyRepository = settings.getReadRepository( MultiplyRepository() )
-	if not multiplyRepository.activateMultiply.value:
-		return gcodeText
-	return MultiplySkein().getCraftedGcode( gcodeText, multiplyRepository )
+	return (
+		MultiplySkein().getCraftedGcode(gcodeText, multiplyRepository)
+		if multiplyRepository.activateMultiply.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."

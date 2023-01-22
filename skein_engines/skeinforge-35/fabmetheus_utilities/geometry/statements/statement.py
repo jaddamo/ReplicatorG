@@ -32,7 +32,7 @@ def processXMLElement(xmlElement):
 	if len(functions) < 1:
 		return
 	function = functions[-1]
-	if xmlElement.object == None:
+	if xmlElement.object is None:
 		xmlElement.object = getLocalAttribute(xmlElement)
 	if xmlElement.object.keyTuple[1] != None:
 		localValue = evaluate.getEvaluatedExpressionValueBySplitLine( xmlElement.object.keyTuple[1], xmlElement )

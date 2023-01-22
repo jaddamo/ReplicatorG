@@ -95,8 +95,10 @@ def getWindowAnalyzeFileGivenText( fileName, gcodeText, repository=None):
 	"Write statistics for a gcode file."
 	print('')
 	print('')
-	print('Statistics are being generated for the file ' + archive.getSummarizedFileName(fileName) )
-	if repository == None:
+	print(
+		f'Statistics are being generated for the file {archive.getSummarizedFileName(fileName)}'
+	)
+	if repository is None:
 		repository = settings.getReadRepository( StatisticRepository() )
 	skein = StatisticSkein()
 	statisticGcode = skein.getCraftedGcode(gcodeText, repository)

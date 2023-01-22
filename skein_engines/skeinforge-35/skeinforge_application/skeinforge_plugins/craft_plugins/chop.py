@@ -131,9 +131,9 @@ def getCraftedText( fileName, gcodeText = '', repository=None):
 		if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'chop'):
 			return gcodeText
 	carving = svg_writer.getCarving(fileName)
-	if carving == None:
+	if carving is None:
 		return ''
-	if repository == None:
+	if repository is None:
 		repository = ChopRepository()
 		settings.getReadRepository(repository)
 	return ChopSkein().getCarvedSVG( carving, fileName, repository )
@@ -145,7 +145,7 @@ def getNewRepository():
 def writeOutput(fileName=''):
 	"Chop a GNU Triangulated Surface file.  If no fileName is specified, chop the first GNU Triangulated Surface file in this folder."
 	startTime = time.time()
-	print('File ' + archive.getSummarizedFileName(fileName) + ' is being chopped.')
+	print(f'File {archive.getSummarizedFileName(fileName)} is being chopped.')
 	repository = ChopRepository()
 	settings.getReadRepository(repository)
 	chopGcode = getCraftedText( fileName, '', repository )
@@ -156,8 +156,12 @@ def writeOutput(fileName=''):
 	suffixReplacedBaseName = os.path.basename(suffixFileName).replace(' ', '_')
 	suffixFileName = os.path.join( suffixDirectoryName, suffixReplacedBaseName )
 	archive.writeFileText( suffixFileName, chopGcode )
-	print('The chopped file is saved as ' + archive.getSummarizedFileName(suffixFileName) )
-	print('It took %s to chop the file.' % euclidean.getDurationString( time.time() - startTime ) )
+	print(
+		f'The chopped file is saved as {archive.getSummarizedFileName(suffixFileName)}'
+	)
+	print(
+		f'It took {euclidean.getDurationString(time.time() - startTime)} to chop the file.'
+	)
 	settings.openSVGPage( suffixFileName, repository.svgViewer.value )
 
 

@@ -33,7 +33,7 @@ def processXMLElement(xmlElement):
 def writeXMLElement(fileNames, target, xmlElement):
 	"Write target."
 	object = target.object
-	if object == None:
+	if object is None:
 		print('Warning, writeTarget in write could not get object for:')
 		print(xmlElement)
 		return
@@ -42,10 +42,10 @@ def writeXMLElement(fileNames, target, xmlElement):
 	fileNameRoot = evaluate.getEvaluatedStringDefault(fileNameRoot, 'file', xmlElement)
 	fileNameRoot += evaluate.getEvaluatedStringDefault('', 'suffix', xmlElement)
 	extension = evaluate.getEvaluatedStringDefault(object.getFabricationExtension(), 'extension', xmlElement)
-	fileName = '%s.%s' % (fileNameRoot, extension)
+	fileName = f'{fileNameRoot}.{extension}'
 	suffixIndex = 1
 	while fileName in fileNames:
-		fileName = '%s_%s.%s' % (fileNameRoot, suffixIndex, extension)
+		fileName = f'{fileNameRoot}_{suffixIndex}.{extension}'
 		suffixIndex += 1
 	fileNames.append(fileName)
 	folderName = evaluate.getEvaluatedStringDefault('', 'folder', xmlElement)

@@ -145,14 +145,14 @@ class BooleanGeometry:
 		settings.printProgress(len(self.rotatedBoundaryLayers), 'slice')
 		rotatedBoundaryLayer = self.getEmptyZExtruderPaths(True, z)
 		self.rotatedBoundaryLayers.append( rotatedBoundaryLayer )
-		if self.bridgeLayerThickness == None:
+		if self.bridgeLayerThickness is None:
 			return z + self.layerThickness
 		allExtrudateLoops = []
 		for loop in rotatedBoundaryLayer.loops:
 			allExtrudateLoops += trianglemesh.getBridgeLoops( self.layerThickness, loop )
 		rotatedBoundaryLayer.rotation = trianglemesh.getBridgeDirection( self.belowLoops, allExtrudateLoops, self.layerThickness )
 		self.belowLoops = allExtrudateLoops
-		if rotatedBoundaryLayer.rotation == None:
+		if rotatedBoundaryLayer.rotation is None:
 			return z + self.layerThickness
 		return z + self.bridgeLayerThickness
 

@@ -36,7 +36,7 @@ def addNegativesByRadius(end, negatives, radius, start, xmlElement):
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get vector3 vertexes from attribute dictionary."
-	if derivation == None:
+	if derivation is None:
 		derivation = TeardropDerivation()
 		derivation.setToXMLElement(xmlElement)
 	teardropPath = getTeardropPath(derivation.inclination, derivation.radius, xmlElement)
@@ -49,7 +49,7 @@ def getGeometryOutputByArguments(arguments, xmlElement):
 
 def getInclination(end, start):
 	"Get inclination."
-	if end == None or start == None:
+	if end is None or start is None:
 		return 0.0
 	endMinusStart = end - start
 	return math.atan2(endMinusStart.z, abs(endMinusStart.dropAxis()))
@@ -67,7 +67,7 @@ def getTeardropPath(inclination, radius, xmlElement):
 	withinSides = int(math.ceil(beginMinusEndAngle / sideAngle))
 	withinSideAngle = -beginMinusEndAngle / float(withinSides)
 	teardropPath = []
-	for side in xrange(withinSides + 1):
+	for _ in xrange(withinSides + 1):
 		unitPolar = euclidean.getWiddershinsUnitPolar(beginAngle)
 		teardropPath.append(unitPolar * radius)
 		beginAngle += withinSideAngle
@@ -80,8 +80,9 @@ def getTeardropPath(inclination, radius, xmlElement):
 		overhangPoint = complex(firstPoint.real - deltaX, radius)
 		remainingDeltaX = max(0.0, overhangPoint.real - 0.5 * overhangSpan )
 		overhangPoint += complex(-remainingDeltaX, remainingDeltaX / tanOverhangAngle)
-		teardropPath.append(complex(-overhangPoint.real, overhangPoint.imag))
-		teardropPath.append(overhangPoint)
+		teardropPath.extend(
+			(complex(-overhangPoint.real, overhangPoint.imag), overhangPoint)
+		)
 	return euclidean.getVector3Path(teardropPath)
 
 def getTeardropPathByEndStart(end, radius, start, xmlElement):

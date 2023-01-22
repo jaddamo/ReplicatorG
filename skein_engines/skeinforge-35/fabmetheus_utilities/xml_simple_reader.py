@@ -74,20 +74,23 @@ def getXMLLines(text):
 		if len( strippedLine ) > 1:
 			firstCharacter = strippedLine[0]
 			lastCharacter = strippedLine[-1]
-		if firstCharacter == '<' and lastCharacter != '>' and accumulatedOutput == None:
+		if (
+			firstCharacter == '<'
+			and lastCharacter != '>'
+			and accumulatedOutput is None
+		):
 			accumulatedOutput = cStringIO.StringIO()
 			accumulatedOutput.write( textLine )
 			if strippedLine[ : len('<!--') ] == '<!--':
 				lastWord = '-->'
+		elif accumulatedOutput is None:
+			addXMLLine( textLine, combinedLines )
 		else:
-			if accumulatedOutput == None:
-				addXMLLine( textLine, combinedLines )
-			else:
-				accumulatedOutput.write('\n' + textLine )
-				if strippedLine[ - len( lastWord ) : ] == lastWord:
-					addXMLLine( accumulatedOutput.getvalue(), combinedLines )
-					accumulatedOutput = None
-					lastWord = '>'
+			accumulatedOutput.write('\n' + textLine )
+			if strippedLine[ - len( lastWord ) : ] == lastWord:
+				addXMLLine( accumulatedOutput.getvalue(), combinedLines )
+				accumulatedOutput = None
+				lastWord = '>'
 	xmlLines = []
 	for combinedLine in combinedLines:
 		xmlLines += getXMLTagSplitLines(combinedLine)
@@ -101,7 +104,7 @@ def getXMLTagSplitLines(combinedLine):
 	tagEnd = False
 	while characterIndex < len(combinedLine):
 		character = combinedLine[characterIndex]
-		if character == '"' or character == "'":
+		if character in ['"', "'"]:
 			lastWord = character
 		elif combinedLine[characterIndex : characterIndex + len('<!--')] == '<!--':
 			lastWord = '-->'
@@ -113,14 +116,13 @@ def getXMLTagSplitLines(combinedLine):
 				return [combinedLine]
 			character = None
 			lastWord = None
-		if character == '>':
+		if character == '<':
+			if tagEnd and combinedLine[characterIndex : characterIndex + 2] != '</':
+				splitIndexes.append(characterIndex)
+		elif character == '>':
 			tagEnd = True
-		elif character == '<':
-			if tagEnd:
-				if combinedLine[characterIndex : characterIndex + 2] != '</':
-					splitIndexes.append(characterIndex)
 		characterIndex += 1
-	if len(splitIndexes) < 1:
+	if not splitIndexes:
 		return [combinedLine]
 	xmlTagSplitLines = []
 	lastSplitIndex = 0
@@ -204,25 +206,19 @@ class XMLElement:
 		"Get the cascade import file name."
 		if self.importName != '':
 			return self.importName
-		if self.parent == None:
-			return ''
-		return self.parent.getCascadeImportName()
+		return '' if self.parent is None else self.parent.getCascadeImportName()
 
 	def getCascadeValue( self, defaultValue, key ):
 		"Get the cascade value."
 		if key in self.attributeDictionary:
 			return self.attributeDictionary[key]
-		if self.parent == None:
+		if self.parent is None:
 			return defaultValue
 		return self.parent.getCascadeValue( defaultValue, key )
 
 	def getChildrenWithClassName(self, className):
 		"Get the children which have the given class name."
-		childrenWithClassName = []
-		for child in self.children:
-			if className == child.className:
-				childrenWithClassName.append(child)
-		return childrenWithClassName
+		return [child for child in self.children if className == child.className]
 
 	def getChildrenWithClassNameRecursively(self, className):
 		"Get the children which have the given class name recursively."
@@ -235,9 +231,8 @@ class XMLElement:
 		"Copy the xml element, set its dictionary and add it to the parent."
 		copy = self.getCopyShallow(self.attributeDictionary.copy())
 		copy.setParentAddToChildren(parent)
-		if idSuffix != '':
-			if 'id' in copy.attributeDictionary:
-				copy.attributeDictionary['id'] = copy.attributeDictionary['id'] + idSuffix
+		if idSuffix != '' and 'id' in copy.attributeDictionary:
+			copy.attributeDictionary['id'] = copy.attributeDictionary['id'] + idSuffix
 		copy.className = self.className
 		copy.text = self.text
 		copy.addToIDDictionaryIFIDExists()
@@ -259,25 +254,20 @@ class XMLElement:
 
 	def getFirstChildWithClassName(self, className):
 		"Get the first child which has the given class name."
-		for child in self.children:
-			if className == child.className:
-				return child
-		return None
+		return next(
+			(child for child in self.children if className == child.className), None
+		)
 
 	def getIDSuffix( self, elementIndex = None ):
 		"Get the id suffix from the dictionary."
 		suffix = self.className
 		if 'id' in self.attributeDictionary:
 			suffix = self.attributeDictionary['id']
-		if elementIndex == None:
-			return '_%s' % suffix
-		return '_%s_%s' % ( suffix, elementIndex )
+		return f'_{suffix}' if elementIndex is None else f'_{suffix}_{elementIndex}'
 
 	def getImportNameWithDot(self):
 		"Get import name with dot."
-		if self.importName == '':
-			return ''
-		return self.importName + '.'
+		return '' if self.importName == '' else f'{self.importName}.'
 
 	def getParentParseReplacedLine( self, line, lineStripped, parent ):
 		"Parse replaced line and return the parent."
@@ -287,9 +277,7 @@ class XMLElement:
 			self.setParentAddToChildren( parent )
 			return parent
 		if lineStripped[ : len('</') ] == '</':
-			if parent == None:
-				return parent
-			return parent.parent
+			return parent if parent is None else parent.parent
 		self.setParentAddToChildren( parent )
 		cdataBeginIndex = lineStripped.find('<![CDATA[')
 		if cdataBeginIndex != - 1:
@@ -306,24 +294,23 @@ class XMLElement:
 		withinQuote = ''
 		for characterIndex in xrange( len( lineAfterClassName ) ):
 			character = lineAfterClassName[characterIndex]
-			if lastQuoteCharacter == None:
-				if character == '"' or character == "'":
-					lastQuoteCharacter = character
-					character = ''
+			if lastQuoteCharacter is None and character in ['"', "'"]:
+				lastQuoteCharacter = character
+				character = ''
 			if character == lastQuoteCharacter:
 				self.addAttribute( beforeQuote, withinQuote )
 				beforeQuote = ''
 				lastQuoteCharacter = None
 				withinQuote = ''
 				character = ''
-			if lastQuoteCharacter == None:
+			if lastQuoteCharacter is None:
 				beforeQuote += character
 			else:
 				withinQuote += character
 		self.addToIDDictionaryIFIDExists()
 		if lastWord == '/>':
 			return parent
-		tagEnd = '</%s>' % self.className
+		tagEnd = f'</{self.className}>'
 		if lineStripped[ - len( tagEnd ) : ] == tagEnd:
 			untilTagEnd = lineStripped[ : - len( tagEnd ) ]
 			lastGreaterThanIndex = untilTagEnd.rfind('>')
@@ -337,15 +324,13 @@ class XMLElement:
 
 	def getPaths(self):
 		"Get all paths."
-		if self.object == None:
-			return []
-		return self.object.getPaths()
+		return [] if self.object is None else self.object.getPaths()
 
 	def getPreviousVertex(self, defaultVector3=None):
 		"Get previous vertex if it exists."
-		if self.parent == None:
+		if self.parent is None:
 			return defaultVector3
-		if self.parent.object == None:
+		if self.parent.object is None:
 			return defaultVector3
 		if len(self.parent.object.vertexes) < 1:
 			return defaultVector3
@@ -353,7 +338,7 @@ class XMLElement:
 
 	def getPreviousXMLElement(self):
 		"Get previous XMLElement if it exists."
-		if self.parent == None:
+		if self.parent is None:
 			return None
 		previousXMLElementIndex = self.parent.children.index(self) - 1
 		if previousXMLElementIndex < 0:
@@ -362,16 +347,16 @@ class XMLElement:
 
 	def getRoot(self):
 		"Get the root element."
-		if self.parent == None:
-			return self
-		return self.parent.getRoot()
+		return self if self.parent is None else self.parent.getRoot()
 
 	def getSubChildWithID( self, idReference ):
 		"Get the child which has the idReference."
 		for child in self.children:
-			if 'bf:id' in child.attributeDictionary:
-				if child.attributeDictionary['bf:id'] == idReference:
-					return child
+			if (
+				'bf:id' in child.attributeDictionary
+				and child.attributeDictionary['bf:id'] == idReference
+			):
+				return child
 			subChildWithID = child.getSubChildWithID( idReference )
 			if subChildWithID != None:
 				return subChildWithID
@@ -387,16 +372,12 @@ class XMLElement:
 
 	def getVertexes(self):
 		"Get the vertexes."
-		if self.object == None:
-			return []
-		return self.object.getVertexes()
+		return [] if self.object is None else self.object.getVertexes()
 
 	def getXMLElementByID(self, idKey):
 		"Get the xml element by id."
 		idDictionary = self.getRoot().idDictionary
-		if idKey in idDictionary:
-			return idDictionary[idKey]
-		return None
+		return idDictionary[idKey] if idKey in idDictionary else None
 
 	def getXMLElementByImportID(self, idKey):
 		"Get the xml element by import file name and id."
@@ -409,9 +390,7 @@ class XMLElement:
 	def getXMLElementsByName(self, name):
 		"Get the xml elements by name."
 		nameDictionary = self.getRoot().nameDictionary
-		if name in nameDictionary:
-			return nameDictionary[name]
-		return None
+		return nameDictionary[name] if name in nameDictionary else None
 
 	def getXMLProcessor(self):
 		"Get the xmlProcessor."
@@ -486,7 +465,7 @@ class XMLSimpleReader:
 		if self.root != None:
 			return
 		lowerClassName = xmlElement.className.lower()
-		if lowerClassName == 'comment' or lowerClassName == '!doctype':
+		if lowerClassName in ['comment', '!doctype']:
 			return
 		self.root = xmlElement
 		self.root.parser = self

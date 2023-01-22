@@ -29,12 +29,14 @@ def getManipulatedPaths(close, loop, prefix, sideLength, xmlElement):
 	if path == getSegmentPathDefault():
 		return [loop]
 	path = getXNormalizedVector3Path(path)
-	segmentCenter = evaluate.getVector3ByPrefix(None, prefix + 'center', xmlElement)
+	segmentCenter = evaluate.getVector3ByPrefix(
+		None, f'{prefix}center', xmlElement
+	)
 	if euclidean.getIsWiddershinsByVector3(loop):
 		path = path[: : -1]
 		for point in path:
 			point.x = 1.0 - point.x
-			if segmentCenter == None:
+			if segmentCenter is None:
 				point.y = - point.y
 	segmentLoop = []
 	startEnd = StartEnd(len(loop), prefix, xmlElement)
@@ -143,15 +145,21 @@ class StartEnd:
 	'Class to get a start through end range.'
 	def __init__(self, modulo, prefix, xmlElement):
 		"Initialize."
-		self.start = evaluate.getEvaluatedIntDefault(0, prefix + 'start', xmlElement)
+		self.start = evaluate.getEvaluatedIntDefault(0, f'{prefix}start', xmlElement)
 		self.start = lineation.getWrappedInteger(self.start, modulo)
-		self.extent = evaluate.getEvaluatedIntDefault(modulo - self.start, prefix + 'extent', xmlElement)
-		self.end = evaluate.getEvaluatedIntDefault(self.start + self.extent, prefix + 'end', xmlElement)
+		self.extent = evaluate.getEvaluatedIntDefault(
+			modulo - self.start, f'{prefix}extent', xmlElement
+		)
+		self.end = evaluate.getEvaluatedIntDefault(
+			self.start + self.extent, f'{prefix}end', xmlElement
+		)
 		self.end = lineation.getWrappedInteger(self.end, modulo)
-		self.revolutions = evaluate.getEvaluatedIntDefault(1, prefix + 'revolutions', xmlElement)
+		self.revolutions = evaluate.getEvaluatedIntDefault(
+			1, f'{prefix}revolutions', xmlElement
+		)
 		if self.revolutions > 1:
 			self.end += modulo * (self.revolutions - 1)
 
 	def __repr__(self):
 		"Get the string representation of this StartEnd."
-		return '%s, %s, %s' % (self.start, self.end, self.revolutions)
+		return f'{self.start}, {self.end}, {self.revolutions}'

@@ -74,8 +74,10 @@ def addBottomLoop(deltaZ, loops):
 	bottomLoop = loops[0]
 	bottomAddition = []
 	bottomZ = euclidean.getBottomPath(bottomLoop) + deltaZ
-	for point in bottomLoop:
-		bottomAddition.append(Vector3Index(len(bottomAddition), point.x, point.y, bottomZ))
+	bottomAddition.extend(
+		Vector3Index(len(bottomAddition), point.x, point.y, bottomZ)
+		for point in bottomLoop
+	)
 	loops.insert(0, bottomAddition)
 	numberOfVertexes = 0
 	for loop in loops:
@@ -166,9 +168,10 @@ def getBevelPath(begin, bevel, center, end):
 		return [complex(center.real, center.imag) + extensionLength * endMinusCenter]
 	centerMinusBegin *= (centerMinusBeginLength - bevel) / centerMinusBeginLength
 	extensionLength = min(maximumExtensionLength, bevel)
-	bevelPath = [complex(center.real, center.imag) + extensionLength * endMinusCenter]
-	bevelPath.append(begin + centerMinusBegin)
-	return bevelPath
+	return [
+		complex(center.real, center.imag) + extensionLength * endMinusCenter,
+		begin + centerMinusBegin,
+	]
 
 def getGearPaths(derivation, pitchRadius, teeth, toothProfile):
 	'Get gear paths.'
@@ -189,9 +192,11 @@ def getGearProfileCylinder(teeth, toothProfile):
 	gearProfile = []
 	toothAngleRadian = 2.0 * math.pi / float(teeth)
 	totalToothAngle = 0.0
-	for toothIndex in xrange(abs(teeth)):
-		for toothPoint in toothProfile:
-			gearProfile.append(toothPoint * euclidean.getWiddershinsUnitPolar(totalToothAngle))
+	for _ in xrange(abs(teeth)):
+		gearProfile.extend(
+			toothPoint * euclidean.getWiddershinsUnitPolar(totalToothAngle)
+			for toothPoint in toothProfile
+		)
 		totalToothAngle += toothAngleRadian
 	return gearProfile
 
@@ -224,7 +229,7 @@ def getGearProfileRack(derivation, toothProfile):
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get vector3 vertexes from attribute dictionary."
-	if derivation == None:
+	if derivation is None:
 		derivation = GearDerivation()
 		derivation.setToXMLElement(xmlElement)
 	creationFirst = derivation.creationType.lower()[: 1]
@@ -319,9 +324,8 @@ def getLiftedOutput(derivation, geometryOutput, xmlElement):
 
 def getLighteningHoles(derivation, gearHolePaths, pitchRadius):
 	'Get cutout circles.'
-	if gearHolePaths != None:
-		if len(gearHolePaths) > 0:
-			return gearHolePaths
+	if gearHolePaths != None and len(gearHolePaths) > 0:
+		return gearHolePaths
 	innerRadius = abs(pitchRadius) - derivation.dedendum
 	lighteningHoleOuterRadius = innerRadius - derivation.rimWidth
 	shaftRimRadius = max(derivation.shaftRimRadius, (lighteningHoleOuterRadius) * (0.5 - math.sqrt(0.1875)))
@@ -347,7 +351,7 @@ def getLighteningHoles(derivation, gearHolePaths, pitchRadius):
 			axialMargin = getAxialMargin(lighteningHoleRadius, newNumberOfLighteningHoles, polygonRadius)
 	sideAngle = 2.0 * math.pi / float(numberOfLighteningHoles)
 	startAngle = 0.0
-	for lighteningHoleIndex in xrange(numberOfLighteningHoles):
+	for _ in xrange(numberOfLighteningHoles):
 		unitPolar = euclidean.getWiddershinsUnitPolar(startAngle)
 		lighteningHole = euclidean.getComplexPolygon(unitPolar * polygonRadius, lighteningHoleRadius, -13)
 		lighteningHoles.append(lighteningHole)
@@ -365,8 +369,10 @@ def getOutputCylinder(
 	if twist != 0.0:
 		twistDegrees = math.degrees(twist)
 		extrudeDerivation.twistPathDefault = []
-		for complexPoint in derivation.helixPath:
-			extrudeDerivation.twistPathDefault.append(Vector3(complexPoint.real, twistDegrees * complexPoint.imag))
+		extrudeDerivation.twistPathDefault.extend(
+			Vector3(complexPoint.real, twistDegrees * complexPoint.imag)
+			for complexPoint in derivation.helixPath
+		)
 		extrude.insertTwistPortions(extrudeDerivation, xmlElement)
 	if derivation.operatingAngle != 180.0:
 		addBevelGear(derivation, extrudeDerivation, pitchRadius, positives, teeth, vector3GearProfile)
@@ -476,14 +482,16 @@ def getToothProfile(derivation, pitchRadius, teeth):
 
 def getToothProfileAnnulus(derivation, pitchRadius, teeth):
 	'Get profile for one tooth of an annulus.'
-	toothProfileHalf = []
 	toothProfileHalfCylinder = getToothProfileHalfCylinder(derivation, pitchRadius)
 	pitchRadius = -pitchRadius
 	innerRadius = pitchRadius - derivation.addendum
-	# tooth is multiplied by 1.02 because at around 1.01 for a 7/-23/20.0 test case, there is intersection since the paths are bending together
-	for point in getWidthMultipliedPath(toothProfileHalfCylinder, 1.02 / derivation.toothWidthMultiplier):
-		if abs(point) >= innerRadius:
-			toothProfileHalf.append(point)
+	toothProfileHalf = [
+		point
+		for point in getWidthMultipliedPath(
+			toothProfileHalfCylinder, 1.02 / derivation.toothWidthMultiplier
+		)
+		if abs(point) >= innerRadius
+	]
 	profileFirst = toothProfileHalf[0]
 	profileSecond = toothProfileHalf[1]
 	firstMinusSecond = profileFirst - profileSecond
@@ -518,11 +526,10 @@ def getToothProfileCylinder(derivation, pitchRadius, teeth):
 	'Get profile for one tooth of a cylindrical gear.'
 	toothProfileHalfCylinder = getToothProfileHalfCylinder(derivation, pitchRadius)
 	toothProfileHalfCylinder = getWidthMultipliedPath(toothProfileHalfCylinder, derivation.toothWidthMultiplier)
-	toothProfileHalf = []
 	innerRadius = pitchRadius - derivation.dedendum
-	for point in toothProfileHalfCylinder:
-		if abs(point) >= innerRadius:
-			toothProfileHalf.append(point)
+	toothProfileHalf = [
+		point for point in toothProfileHalfCylinder if abs(point) >= innerRadius
+	]
 	return getToothProfileCylinderByProfile(derivation, pitchRadius, teeth, toothProfileHalf)
 
 def getToothProfileCylinderByProfile(derivation, pitchRadius, teeth, toothProfileHalf):

@@ -74,11 +74,13 @@ def getCraftedTextFromText(gcodeText, repository=None):
 	"Outset the preface gcode text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'outset'):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( OutsetRepository() )
-	if not repository.activateOutset.value:
-		return gcodeText
-	return OutsetSkein().getCraftedGcode(gcodeText, repository)
+	return (
+		OutsetSkein().getCraftedGcode(gcodeText, repository)
+		if repository.activateOutset.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -176,7 +178,7 @@ class OutsetSkein:
 		elif firstWord == '(<surroundingLoop>)':
 			self.boundary = []
 			self.rotatedBoundaryLayer.loops.append( self.boundary )
-		if self.rotatedBoundaryLayer == None:
+		if self.rotatedBoundaryLayer is None:
 			self.distanceFeedRate.addLine(line)
 
 

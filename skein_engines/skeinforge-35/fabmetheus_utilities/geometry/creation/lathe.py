@@ -38,8 +38,8 @@ def addLoopByComplex(derivation, endMultiplier, loopLists, path, pointComplex, v
 def addNegatives(derivation, negatives, paths):
 	"Add pillars output to negatives."
 	portionDirections = getSpacedPortionDirections(derivation.interpolationDictionary)
+	endMultiplier = 1.000001
 	for path in paths:
-		endMultiplier = 1.000001
 		geometryOutput = trianglemesh.getPillarsOutput(getLoopListsByPath(endMultiplier, derivation, path, portionDirections))
 		negatives.append(geometryOutput)
 
@@ -52,7 +52,7 @@ def addNegativesPositives(derivation, negatives, paths, positives):
 			endMultiplier = 1.000001
 		loopListsByPath = getLoopListsByPath(derivation, endMultiplier, path)
 		geometryOutput = trianglemesh.getPillarsOutput(loopListsByPath)
-		if endMultiplier == None:
+		if endMultiplier is None:
 			positives.append(geometryOutput)
 		else:
 			negatives.append(geometryOutput)
@@ -65,7 +65,7 @@ def addOffsetAddToLists( loop, offset, vector3Index, vertexes ):
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get triangle mesh from attribute dictionary."
-	if derivation == None:
+	if derivation is None:
 		derivation = LatheDerivation()
 		derivation.setToXMLElement(xmlElement)
 	if len(euclidean.getConcatenatedList(derivation.target)) == 0:
@@ -95,10 +95,6 @@ def getGeometryOutputByNegativesPositives(derivation, negatives, positives, xmlE
 	if len(negatives) < 1:
 		return solid.getGeometryOutputByManipulation(positiveOutput, xmlElement)
 	return solid.getGeometryOutputByManipulation({'difference' : {'shapes' : [positiveOutput] + negatives}}, xmlElement)##
-	interpolationOffset = derivation.interpolationDictionary['offset']
-	if len(negatives) < 1:
-		return getGeometryOutputByOffset(positiveOutput, interpolationOffset, xmlElement)
-	return getGeometryOutputByOffset({'difference' : {'shapes' : [positiveOutput] + negatives}}, interpolationOffset, xmlElement)
 
 def getGeometryOutputByOffset( geometryOutput, interpolationOffset, xmlElement ):
 	"Get solid output by interpolationOffset."
@@ -160,8 +156,8 @@ class LatheDerivation:
 			print(xmlElement)
 			self.target = []
 			return
-		if self.axisStart == None:
-			if self.axisEnd == None:
+		if self.axisStart is None:
+			if self.axisEnd is None:
 				self.axisStart = firstPath[0]
 				self.axisEnd = firstPath[-1]
 			else:
@@ -183,7 +179,7 @@ class LatheDerivation:
 			return
 		firstVector3 /= firstVector3Length
 		self.axisProjectiveSpace = euclidean.ProjectiveSpace().getByBasisZFirst(self.axis, firstVector3)
-		if self.sides == None:
+		if self.sides is None:
 			distanceToLine = euclidean.getDistanceToLineByPaths(self.axisStart, self.axisEnd, self.target)
 			self.sides = evaluate.getSidesMinimumThreeBasedOnPrecisionSides(distanceToLine, xmlElement)
 		if len(self.loop) < 1:

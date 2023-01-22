@@ -16,4 +16,3 @@ __license__ = 'GPL 3.0'
 
 def processXMLElement(xmlElement):
 	"Process the xml element."
-	pass

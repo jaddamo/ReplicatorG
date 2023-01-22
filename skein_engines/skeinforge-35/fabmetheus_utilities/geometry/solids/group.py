@@ -25,7 +25,7 @@ def convertXMLElement(geometryOutput, xmlElement):
 
 def processShape(archivableClass, xmlElement):
 	"Get any new elements and process the shape."
-	if xmlElement == None:
+	if xmlElement is None:
 		return
 	archivableObject = evaluate.getArchivableObjectAddToParent(archivableClass, xmlElement)
 	matrix.setXMLElementDictionaryToOtherElementDictionary(xmlElement, xmlElement.object.matrix4X4, 'matrix.', xmlElement)
@@ -51,7 +51,6 @@ class Group(dictionary.Dictionary):
 
 	def addXMLSection(self, depth, output):
 		"Add the xml section for this object."
-		pass
 
 	def getLoops(self, importRadius, z):
 		"Get loops sliced through shape."

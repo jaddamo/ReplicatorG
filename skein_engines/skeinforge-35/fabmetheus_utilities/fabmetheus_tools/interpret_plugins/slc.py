@@ -63,7 +63,7 @@ def getLittleEndianUnsignedLongGivenFile( file ):
 def getPointsFromFile( numPoints, file ):
 	"Process the vertice points for a given boundary."
 	points = []
-	for pointIndex in xrange( numPoints ):
+	for _ in xrange( numPoints ):
 		x = getLittleEndianFloatGivenFile( file )
 		y = getLittleEndianFloatGivenFile( file )
 		points.append( complex(x, y) )
@@ -86,7 +86,7 @@ class SampleTableEntry:
 
 	def __repr__(self):
 		"Get the string representation of this sample table entry."
-		return '%s, %s, %s' % ( self.min_z_level, self.layer_thickness, self.beam_comp )
+		return f'{self.min_z_level}, {self.layer_thickness}, {self.beam_comp}'
 
 
 class SLCCarving:
@@ -147,7 +147,7 @@ class SLCCarving:
 				return
 			rotatedBoundaryLayer = euclidean.RotatedLoopLayer( minLayer )
 			self.rotatedBoundaryLayers.append( rotatedBoundaryLayer )
-			for contourIndex in xrange( numContours ):
+			for _ in xrange( numContours ):
 				numPoints = getLittleEndianUnsignedLongGivenFile( file )
 				numGaps = getLittleEndianUnsignedLongGivenFile( file )
 				if numPoints > 2:
@@ -156,12 +156,11 @@ class SLCCarving:
 	def readFile( self, fileName ):
 		"Read SLC and store the layers."
 		self.fileName = fileName
-		pslcfile = open( fileName, 'rb')
-		readHeader( pslcfile )
-		pslcfile.read( 256 ) #Go past the 256 byte 3D Reserved Section.
-		self.readTableEntry( pslcfile )
-		self.processContourLayers( pslcfile )
-		pslcfile.close()
+		with open( fileName, 'rb') as pslcfile:
+			readHeader( pslcfile )
+			pslcfile.read( 256 ) #Go past the 256 byte 3D Reserved Section.
+			self.readTableEntry( pslcfile )
+			self.processContourLayers( pslcfile )
 		self.cornerMaximum = Vector3(-999999999.0, -999999999.0, self.maximumZ)
 		self.cornerMinimum = Vector3(999999999.0, 999999999.0, self.minimumZ)
 		for rotatedBoundaryLayer in self.rotatedBoundaryLayers:
@@ -180,25 +179,21 @@ class SLCCarving:
 		if tableEntrySize == 0:
 			print( "Sampling table size is zero!" )
 			exit()
-		for index in xrange( tableEntrySize ):
+		for _ in xrange( tableEntrySize ):
 			sampleTableEntry = SampleTableEntry( file )
 			self.layerThickness = sampleTableEntry.layer_thickness
 
 	def setCarveBridgeLayerThickness( self, bridgeLayerThickness ):
 		"Set the bridge layer thickness.  If the infill is not in the direction of the bridge, the bridge layer thickness should be given as None or not set at all."
-		pass
 
 	def setCarveLayerThickness( self, layerThickness ):
 		"Set the layer thickness."
-		pass
 
 	def setCarveImportRadius( self, importRadius ):
 		"Set the import radius."
-		pass
 
 	def setCarveIsCorrectMesh( self, isCorrectMesh ):
 		"Set the is correct mesh flag."
-		pass
 
 
 def main():

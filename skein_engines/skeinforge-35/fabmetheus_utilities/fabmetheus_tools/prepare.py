@@ -29,23 +29,23 @@ def removeGeneratedFiles():
 	for gcodeFilePath in gcodeFilePaths:
 		if 'alterations' not in gcodeFilePath:
 			os.remove(gcodeFilePath)
-			print('removeGeneratedFiles deleted ' + gcodeFilePath)
+			print(f'removeGeneratedFiles deleted {gcodeFilePath}')
 	svgFilePaths = archive.getFilesWithFileTypesWithoutWordsRecursively(['svg'])
 	for svgFilePath in svgFilePaths:
 		if archive.getEndsWithList(svgFilePath, ['_bottom.svg', '_carve.svg', '_chop.svg', '_cleave.svg']):
 			os.remove(svgFilePath)
-			print('removeGeneratedFiles deleted ' + svgFilePath)
+			print(f'removeGeneratedFiles deleted {svgFilePath}')
 	xmlFilePaths = archive.getFilesWithFileTypesWithoutWordsRecursively(['xml'])
 	for xmlFilePath in xmlFilePaths:
 		if archive.getEndsWithList(xmlFilePath, ['_interpret.xml']):
 			os.remove(xmlFilePath)
-			print('removeGeneratedFiles deleted ' + xmlFilePath)
+			print(f'removeGeneratedFiles deleted {xmlFilePath}')
 	archive.removeBackupFilesByTypes(['gcode', 'svg', 'xml'])
 
 def removeZip():
 	'Remove the zip file, then generate a new one.zip -r reprap_python_beanshell * -x \*.pyc \*~'
 	zipName = 'reprap_python_beanshell'
-	zipNameExtension = zipName + '.zip'
+	zipNameExtension = f'{zipName}.zip'
 	if zipNameExtension in os.listdir(os.getcwd()):
 		os.remove(zipNameExtension)
 	shellCommand = 'zip -r %s * -x \*.pyc \*~' % zipName

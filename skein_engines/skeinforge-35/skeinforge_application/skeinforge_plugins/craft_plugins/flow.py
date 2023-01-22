@@ -73,11 +73,13 @@ def getCraftedTextFromText( gcodeText, flowRepository = None ):
 	"Flow a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'flow'):
 		return gcodeText
-	if flowRepository == None:
+	if flowRepository is None:
 		flowRepository = settings.getReadRepository( FlowRepository() )
-	if not flowRepository.activateFlow.value:
-		return gcodeText
-	return FlowSkein().getCraftedGcode( gcodeText, flowRepository )
+	return (
+		FlowSkein().getCraftedGcode(gcodeText, flowRepository)
+		if flowRepository.activateFlow.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -120,7 +122,7 @@ class FlowSkein:
 		"Add flow rate line."
 		flowRateString = euclidean.getRoundedToThreePlaces( self.flowRepository.flowRate.value )
 		if flowRateString != self.oldFlowRateString:
-			self.distanceFeedRate.addLine('M108 S' + flowRateString )
+			self.distanceFeedRate.addLine(f'M108 S{flowRateString}')
 		self.oldFlowRateString = flowRateString
 
 	def getCraftedGcode( self, gcodeText, flowRepository ):
@@ -150,7 +152,7 @@ class FlowSkein:
 		if len(splitLine) < 1:
 			return
 		firstWord = splitLine[0]
-		if firstWord == 'G1' or firstWord == '(<layer>':
+		if firstWord in ['G1', '(<layer>']:
 			self.addFlowRateLineIfNecessary()
 		self.distanceFeedRate.addLine(line)
 

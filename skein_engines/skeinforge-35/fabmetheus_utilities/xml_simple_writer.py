@@ -85,9 +85,7 @@ def compareAttributeKeyAscending(key, otherKey):
 		return - 1
 	if otherKey == 'name':
 		return 1
-	if key < otherKey:
-		return - 1
-	return int(key > otherKey)
+	return - 1 if key < otherKey else int(key > otherKey)
 
 def getAttributeDictionaryString(attributeDictionary):
 	"Add the closed xml tag."
@@ -97,9 +95,9 @@ def getAttributeDictionaryString(attributeDictionary):
 	for attributeDictionaryKey in attributeDictionaryKeys:
 		valueString = str(attributeDictionary[attributeDictionaryKey])
 		if '"' in valueString:
-			attributeDictionaryString += " %s='%s'" % (attributeDictionaryKey, valueString)
+			attributeDictionaryString += f" {attributeDictionaryKey}='{valueString}'"
 		else:
-			attributeDictionaryString += ' %s="%s"' % (attributeDictionaryKey, valueString)
+			attributeDictionaryString += f' {attributeDictionaryKey}="{valueString}"'
 	return attributeDictionaryString
 
 def getBeginGeometryXMLOutput(xmlElement):
@@ -121,11 +119,7 @@ def getBeginXMLOutput():
 
 def getDictionaryWithoutList( dictionary, withoutList ):
 	"Get the dictionary without the keys in the list."
-	dictionaryWithoutList = {}
-	for key in dictionary:
-		if key not in withoutList:
-			dictionaryWithoutList[key] = dictionary[key]
-	return dictionaryWithoutList
+	return {key: dictionary[key] for key in dictionary if key not in withoutList}
 
 def getEndGeometryXMLString(output):
 	"Get the string representation of this object info."

@@ -60,11 +60,13 @@ def getCraftedTextFromText( gcodeText, repository=None ):
 	"Alternate shell text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'altshell' ):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( AltshellRepository() )
-	if not repository.activateAltshell.value:
-		return gcodeText
-	return AltshellSkein().getCraftedGcode( gcodeText, repository )
+	return (
+		AltshellSkein().getCraftedGcode(gcodeText, repository)
+		if repository.activateAltshell.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -122,9 +124,9 @@ class AltshellSkein:
 
 		firstWord = splitLine[ 0 ]
 
-		if line == '(<perimeter> outer )' or line == '(<perimeter> inner )':
+		if line in ['(<perimeter> outer )', '(<perimeter> inner )']:
 			self.state = 1
-	
+
 		elif firstWord == '(</perimeter>)':
 			if self.state == 3:
 				# Open valve command

@@ -92,7 +92,7 @@ def getWindowAnalyzeFileGivenText( fileName, gcodeText, repository=None):
 	"Write scalable vector graphics for a gcode file given the settings."
 	if gcodeText == '':
 		return None
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( VectorwriteRepository() )
 	startTime = time.time()
 	vectorwriteGcode = VectorwriteSkein().getCarvedSVG( fileName, gcodeText, repository )
@@ -103,8 +103,12 @@ def getWindowAnalyzeFileGivenText( fileName, gcodeText, repository=None):
 	suffixReplacedBaseName = os.path.basename(suffixFileName).replace(' ', '_')
 	suffixFileName = os.path.join( suffixDirectoryName, suffixReplacedBaseName )
 	archive.writeFileText( suffixFileName, vectorwriteGcode )
-	print('The vectorwrite file is saved as ' + archive.getSummarizedFileName(suffixFileName) )
-	print('It took %s to vectorwrite the file.' % euclidean.getDurationString( time.time() - startTime ) )
+	print(
+		f'The vectorwrite file is saved as {archive.getSummarizedFileName(suffixFileName)}'
+	)
+	print(
+		f'It took {euclidean.getDurationString(time.time() - startTime)} to vectorwrite the file.'
+	)
 	settings.openSVGPage( suffixFileName, repository.svgViewer.value )
 
 def writeOutput( fileName, fileNameSuffix, gcodeText = ''):
@@ -120,10 +124,8 @@ class SVGWriterVectorwrite( svg_writer.SVGWriter ):
 	"A class to vectorwrite a carving."
 	def addPaths( self, colorName, paths, transformString ):
 		"Add paths to the output."
-		pathString = ''
-		for path in paths:
-			pathString += self.getSVGStringForPath(path) + ' '
-		if len( pathString ) < 1:
+		pathString = ''.join(f'{self.getSVGStringForPath(path)} ' for path in paths)
+		if not pathString:
 			return
 		pathXMLElementCopy = self.pathXMLElement.getCopy('', self.pathXMLElement.parent )
 		pathCopyDictionary = pathXMLElementCopy.attributeDictionary
@@ -278,7 +280,26 @@ class VectorwriteSkein:
 		if len(splitLine) < 1:
 			return
 		firstWord = splitLine[0]
-		if firstWord == 'G1':
+		if firstWord == '(</boundaryPerimeter>)':
+			self.boundaryLoop = None
+		elif firstWord == '(</loop>)':
+			self.addToLoops()
+		elif firstWord == '(</perimeter>)':
+			self.addToPerimeters()
+		elif firstWord == '(<boundaryPoint>':
+			location = gcodec.getLocationFromSplitLine(None, splitLine)
+			if self.boundaryLoop is None:
+				self.boundaryLoop = []
+				self.rotatedBoundaryLayer.boundaryLoops.append( self.boundaryLoop )
+			self.boundaryLoop.append( location.dropAxis(2) )
+		elif firstWord == '(<layer>':
+			self.addRotatedLoopLayer(float(splitLine[1]))
+		elif firstWord == '(<loop>':
+			self.isLoop = True
+		elif firstWord == '(<perimeter>':
+			self.isPerimeter = True
+			self.isOuter = ( splitLine[1] == 'outer')
+		elif firstWord == 'G1':
 			self.linearMove(splitLine)
 		elif firstWord == 'M101':
 			self.extruderActive = True
@@ -292,25 +313,6 @@ class VectorwriteSkein:
 				return
 			self.rotatedBoundaryLayer.paths.append( self.thread )
 			self.thread = []
-		elif firstWord == '(</boundaryPerimeter>)':
-			self.boundaryLoop = None
-		elif firstWord == '(<boundaryPoint>':
-			location = gcodec.getLocationFromSplitLine(None, splitLine)
-			if self.boundaryLoop == None:
-				self.boundaryLoop = []
-				self.rotatedBoundaryLayer.boundaryLoops.append( self.boundaryLoop )
-			self.boundaryLoop.append( location.dropAxis(2) )
-		elif firstWord == '(<layer>':
-			self.addRotatedLoopLayer(float(splitLine[1]))
-		elif firstWord == '(</loop>)':
-			self.addToLoops()
-		elif firstWord == '(<loop>':
-			self.isLoop = True
-		elif firstWord == '(<perimeter>':
-			self.isPerimeter = True
-			self.isOuter = ( splitLine[1] == 'outer')
-		elif firstWord == '(</perimeter>)':
-			self.addToPerimeters()
 
 
 def main():

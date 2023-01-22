@@ -36,7 +36,7 @@ def getManipulatedGeometryOutput(geometryOutput, xmlElement):
 def manipulateXMLElement(target, xmlElement):
 	"Manipulate the xml element."
 	rotateMatrixTetragrid = matrix.getRotateMatrixTetragrid('', xmlElement)
-	if rotateMatrixTetragrid == None:
+	if rotateMatrixTetragrid is None:
 		print('Warning, rotateMatrixTetragrid was None in rotate so nothing will be done for:')
 		print(xmlElement)
 		return
@@ -49,7 +49,7 @@ def processXMLElement(xmlElement):
 def rotatePoints( points, prefix, xmlElement ):
 	"Rotate the points."
 	rotateMatrixTetragrid = matrix.getRotateMatrixTetragrid(prefix, xmlElement)
-	if rotateMatrixTetragrid == None:
+	if rotateMatrixTetragrid is None:
 		print('Warning, rotateMatrixTetragrid was None in rotate so nothing will be done for:')
 		print(xmlElement)
 		return

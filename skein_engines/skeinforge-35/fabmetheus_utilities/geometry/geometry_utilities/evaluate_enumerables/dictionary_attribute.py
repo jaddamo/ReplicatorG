@@ -38,11 +38,10 @@ class DictionaryAttribute:
 
 	def count(self, value):
 		'Get the count.'
-		countTotal = 0
-		for key, iteratorValue in self.dictionaryObject.iteritems():
-			if iteratorValue == value:
-				countTotal += 1
-		return countTotal
+		return sum(
+			iteratorValue == value
+			for key, iteratorValue in self.dictionaryObject.iteritems()
+		)
 
 	def delete(self, arguments):
 		'Get the delete dictionary.'
@@ -65,7 +64,7 @@ class DictionaryAttribute:
 
 	def getIsNotIn(self, value):
 		'Determine if the value is in.'
-		return not(value in self.dictionaryObject)
+		return value not in self.dictionaryObject
 
 	def getLength(self):
 		'Get the length.'
@@ -84,7 +83,9 @@ class DictionaryAttribute:
 		for key, iteratorValue in self.dictionaryObject.iteritems():
 			if iteratorValue == value:
 				return key
-		raise ValueError('Value (%s) not found in index in DictionaryAttribute for (%s).' % (value, self.dictionaryObject))
+		raise ValueError(
+			f'Value ({value}) not found in index in DictionaryAttribute for ({self.dictionaryObject}).'
+		)
 
 	def length(self):
 		'Get the length.'

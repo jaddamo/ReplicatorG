@@ -112,7 +112,7 @@ def addAlreadyFilledArounds( alreadyFilledArounds, loop, radius ):
 		alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, radius )
 		if intercircle.isLargeSameDirection( alreadyFilledInset, center, radius ):
 			alreadyFilledLoop.append( alreadyFilledInset )
-	if len( alreadyFilledLoop ) > 0:
+	if alreadyFilledLoop:
 		alreadyFilledArounds.append( alreadyFilledLoop )
 
 def addSegmentOutline( isThick, outlines, pointBegin, pointEnd, width ):
@@ -128,7 +128,6 @@ def addSegmentOutline( isThick, outlines, pointBegin, pointEnd, width ):
 	if segmentLength == 0.0:
 		return
 	normalizedSegment = segment / segmentLength
-	outline = []
 	segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
 	pointBeginRotated = segmentYMirror * pointBegin
 	pointEndRotated = segmentYMirror * pointEnd
@@ -141,16 +140,14 @@ def addSegmentOutline( isThick, outlines, pointBegin, pointEnd, width ):
 	alongToWidth = exclusionWidth / slope / segmentLength
 	pointBeginIntermediate = euclidean.getIntermediateLocation( along, pointBeginRotated, pointEndRotated )
 	pointEndIntermediate = euclidean.getIntermediateLocation( alongEnd, pointBeginRotated, pointEndRotated )
-	outline.append( pointBeginIntermediate )
+	outline = [pointBeginIntermediate]
 	verticalWidth = complex( 0.0, exclusionWidth )
 	if alongToWidth > 0.9 * remainingToHalf:
 		verticalWidth = complex( 0.0, slope * remainingToHalf * segmentLength )
 		middle = ( pointBeginIntermediate + pointEndIntermediate ) * 0.5
 		middleDown = middle - verticalWidth
 		middleUp = middle + verticalWidth
-		outline.append( middleUp )
-		outline.append( pointEndIntermediate )
-		outline.append( middleDown )
+		outline.extend((middleUp, pointEndIntermediate, middleDown))
 	else:
 		alongOutsideBegin = along + alongToWidth
 		alongOutsideEnd = alongEnd - alongToWidth
@@ -160,11 +157,15 @@ def addSegmentOutline( isThick, outlines, pointBegin, pointEnd, width ):
 		outsideEndCenter = euclidean.getIntermediateLocation( alongOutsideEnd, pointBeginRotated, pointEndRotated )
 		outsideEndCenterDown = outsideEndCenter - verticalWidth
 		outsideEndCenterUp = outsideEndCenter + verticalWidth
-		outline.append( outsideBeginCenterUp )
-		outline.append( outsideEndCenterUp )
-		outline.append( pointEndIntermediate )
-		outline.append( outsideEndCenterDown )
-		outline.append( outsideBeginCenterDown )
+		outline.extend(
+			(
+				outsideBeginCenterUp,
+				outsideEndCenterUp,
+				pointEndIntermediate,
+				outsideEndCenterDown,
+				outsideBeginCenterDown,
+			)
+		)
 	outlines.append( euclidean.getPointsRoundZAxis( normalizedSegment, outline ) )
 
 def getCraftedText( fileName, text = '', repository=None):
@@ -175,7 +176,7 @@ def getCraftedTextFromText(gcodeText, repository=None):
 	"Inset the preface gcode text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'inset'):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( InsetRepository() )
 	return InsetSkein().getCraftedGcode(gcodeText, repository)
 
@@ -208,8 +209,9 @@ def getSegmentsFromLoopListsPoints( loopLists, pointBegin, pointEnd ):
 		for loop in loopList:
 			rotatedLoop = euclidean.getPointsRoundZAxis( segmentYMirror, loop )
 			rotatedLoopList.append( rotatedLoop )
-	xIntersectionIndexList = []
-	xIntersectionIndexList.append( euclidean.XIntersectionIndex( - 1, pointBeginRotated.real ) )
+	xIntersectionIndexList = [
+		euclidean.XIntersectionIndex(-1, pointBeginRotated.real)
+	]
 	xIntersectionIndexList.append( euclidean.XIntersectionIndex( - 1, pointEndRotated.real ) )
 	euclidean.addXIntersectionIndexesFromLoopListsY( rotatedLoopLists, xIntersectionIndexList, pointBeginRotated.imag )
 	segments = euclidean.getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, pointBeginRotated.imag )
@@ -238,10 +240,9 @@ def isIntersectingItself( loop, width ):
 
 def isIntersectingWithinLists( loop, loopLists ):
 	"Determine if the loop is intersecting or is within the loop lists."
-	for loopList in loopLists:
-		if getIsIntersectingWithinList( loop, loopList ):
-			return True
-	return False
+	return any(
+		getIsIntersectingWithinList(loop, loopList) for loopList in loopLists
+	)
 
 def writeOutput(fileName=''):
 	"Inset the carving of a gcode file."
@@ -411,7 +412,7 @@ class InsetSkein:
 		if firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine(None, splitLine)
 			self.boundary.append( location.dropAxis(2) )
-		elif ( firstWord == '(<bridgeRotation>' or firstWord == '<!--bridgeRotation-->'):
+		elif firstWord in ['(<bridgeRotation>', '<!--bridgeRotation-->']:
 			secondWordWithoutBrackets = splitLine[1].replace('(', '').replace(')', '')
 			self.rotatedBoundaryLayer.rotation = complex( secondWordWithoutBrackets )
 		elif firstWord == '(</extrusion>)':
@@ -429,7 +430,7 @@ class InsetSkein:
 		elif firstWord == '(<surroundingLoop>)':
 			self.boundary = []
 			self.rotatedBoundaryLayer.loops.append( self.boundary )
-		if self.rotatedBoundaryLayer == None:
+		if self.rotatedBoundaryLayer is None:
 			self.distanceFeedRate.addLine(line)
 
 

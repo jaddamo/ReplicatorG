@@ -188,7 +188,7 @@ def display( filename = ''):
 
 def displayFile( filename ):
 	"Parse a gcode file and display the commands."
-	print('File ' + filename + ' is being displayed.')
+	print(f'File {filename} is being displayed.')
 	fileText = archive.getFileText( filename )
 	gcodec.writeFileMessageSuffix( filename, displayText(fileText), 'The gcode log file is saved as ', '_log')
 
@@ -214,7 +214,7 @@ def extrude( filename = ''):
 def extrudeFile( filename ):
 	"""Parse a gcode file and send the commands to the extruder.
 	This function requires write access to the serial device, running as root is one way to get that access."""
-	print('File ' + filename + ' is being extruded.')
+	print(f'File {filename} is being extruded.')
 	fileText = archive.getFileText( filename )
 	gcodec.writeFileMessageSuffix( filename, extrudeText(fileText), 'The gcode log file is saved as ', '_log')
 
@@ -259,7 +259,7 @@ class displaySkein:
 
 	def helicalMove( self, isCounterclockwise, splitLine ):
 		"Parse a helical move gcode line and send the commands to the extruder."
-		if self.oldLocation == None:
+		if self.oldLocation is None:
 			return
 		location = Vector3( self.oldLocation )
 		self.setFeedrate(splitLine)
@@ -292,7 +292,7 @@ class displaySkein:
 		steps = int( math.ceil( max( absoluteDifferenceAngle * 2.4, absoluteDifferenceAngle * beforeCenterSegment.length() / curveSection ) ) )
 		stepPlaneAngle = getPolar( afterCenterDifferenceAngle / steps, 1.0 )
 		zIncrement = ( afterCenterSegment.z - beforeCenterSegment.z ) / float( steps )
-		for step in range( 1, steps ):
+		for _ in range( 1, steps ):
 			beforeCenterSegment = getRoundZAxisByPlaneAngle( stepPlaneAngle, beforeCenterSegment )
 			beforeCenterSegment.z += zIncrement
 			arcPoint = center + beforeCenterSegment
@@ -302,7 +302,7 @@ class displaySkein:
 
 	def homeReset(self):
 		"Send all axies to home position. Wait until arrival."
-		homeCommandString = 'reprap.cartesian.homeReset(' + getIntegerString( self.feedrateMinute ) + ', True )'
+		homeCommandString = f'reprap.cartesian.homeReset({getIntegerString(self.feedrateMinute)}, True )'
 		self.evaluateCommand( homeCommandString )
 
 	def linearMove( self, splitLine ):
@@ -321,7 +321,7 @@ class displaySkein:
 		xMoveString = getIntegerString(location.x)
 		yMoveString = getIntegerString(location.y)
 		zMoveString = getIntegerString(location.z)
-		moveCommandString = 'reprap.cartesian.seek( (' + xMoveString + ', ' + yMoveString + ', ' + zMoveString + '), ' + moveSpeedString + ', True )'
+		moveCommandString = f'reprap.cartesian.seek( ({xMoveString}, {yMoveString}, {zMoveString}), {moveSpeedString}, True )'
 		self.evaluateCommand( moveCommandString )
 
 	def parseGCode(self, lines):
@@ -351,14 +351,14 @@ class displaySkein:
 		firstWord = splitLine[0]
 		if firstWord == 'G1':
 			self.linearMove(splitLine)
-		if firstWord == 'G2':
+		elif firstWord == 'G2':
 			self.helicalMove( False, splitLine )
-		if firstWord == 'G3':
+		elif firstWord == 'G3':
 			self.helicalMove( True, splitLine )
-		if firstWord == 'M101':
+		elif firstWord == 'M101':
 			self.extruderActive = 1
 			self.evaluateCommand('reprap.extruder.setMotor(reprap.CMD_REVERSE, 150)')
-		if firstWord == 'M103':
+		elif firstWord == 'M103':
 			self.extruderActive = 0
 			self.evaluateCommand('reprap.extruder.setMotor(reprap.CMD_REVERSE, 0)')
 			self.oldActiveLocation = None

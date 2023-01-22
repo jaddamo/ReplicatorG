@@ -41,9 +41,7 @@ __license__ = 'GPL 3.0'
 def getCarving(fileName):
 	"Get carving."
 	pluginModule = getInterpretPlugin(fileName)
-	if pluginModule == None:
-		return None
-	return pluginModule.getCarving(fileName)
+	return None if pluginModule is None else pluginModule.getCarving(fileName)
 
 def getFirstTranslatorFileNameUnmodified(fileName):
 	"Get the first file name from the translators in the import plugins folder, if the file name is not already set."
@@ -74,13 +72,13 @@ def getInterpretPlugin(fileName):
 	"Get the interpret plugin for the file."
 	importPluginFileNames = getImportPluginFileNames()
 	for importPluginFileName in importPluginFileNames:
-		fileTypeDot = '.' + importPluginFileName
+		fileTypeDot = f'.{importPluginFileName}'
 		if fileName[ - len(fileTypeDot) : ].lower() == fileTypeDot:
 			importPluginsDirectoryPath = getPluginsDirectoryPath()
 			pluginModule = archive.getModuleWithDirectoryPath( importPluginsDirectoryPath, importPluginFileName )
 			if pluginModule != None:
 				return pluginModule
-	print('Could not find plugin to handle ' + fileName )
+	print(f'Could not find plugin to handle {fileName}')
 	return None
 
 def getNewRepository():
@@ -96,8 +94,8 @@ def getTranslatorFileTypeTuples():
 	importPluginFileNames = getImportPluginFileNames()
 	fileTypeTuples = []
 	for importPluginFileName in importPluginFileNames:
-		fileTypeTitle = importPluginFileName.upper() + ' files'
-		fileType = ( fileTypeTitle, '*.' + importPluginFileName )
+		fileTypeTitle = f'{importPluginFileName.upper()} files'
+		fileType = fileTypeTitle, f'*.{importPluginFileName}'
 		fileTypeTuples.append( fileType )
 	fileTypeTuples.sort()
 	return fileTypeTuples
@@ -106,10 +104,10 @@ def getWindowAnalyzeFile(fileName):
 	"Get file interpretion."
 	startTime = time.time()
 	carving = getCarving(fileName)
-	if carving == None:
+	if carving is None:
 		return None
 	interpretGcode = str( carving )
-	if interpretGcode == '':
+	if not interpretGcode:
 		return None
 	repository = settings.getReadRepository( InterpretRepository() )
 	if repository.printInterpretion.value:
@@ -119,22 +117,28 @@ def getWindowAnalyzeFile(fileName):
 	suffixReplacedBaseName = os.path.basename(suffixFileName).replace(' ', '_')
 	suffixFileName = os.path.join( suffixDirectoryName, suffixReplacedBaseName )
 	archive.writeFileText( suffixFileName, interpretGcode )
-	print('The interpret file is saved as ' + archive.getSummarizedFileName(suffixFileName) )
-	print('It took %s to interpret the file.' % euclidean.getDurationString( time.time() - startTime ) )
+	print(
+		f'The interpret file is saved as {archive.getSummarizedFileName(suffixFileName)}'
+	)
+	print(
+		f'It took {euclidean.getDurationString(time.time() - startTime)} to interpret the file.'
+	)
 	textProgram = repository.textProgram.value
 	if textProgram == '':
 		return None
 	if textProgram == 'webbrowser':
 		settings.openWebPage(suffixFileName)
 		return None
-	textFilePath = '"' + os.path.normpath(suffixFileName) + '"' # " to send in file name with spaces
-	shellCommand = textProgram + ' ' + textFilePath
+	textFilePath = f'"{os.path.normpath(suffixFileName)}"'
+	shellCommand = f'{textProgram} {textFilePath}'
 	print('Sending the shell command:')
 	print( shellCommand )
 	commandResult = os.system( shellCommand )
 	if commandResult != 0:
-		print('It may be that the system could not find the %s program.' % textProgram )
-		print('If so, try installing the %s program or look for another one, like Open Office which can be found at:' % textProgram )
+		print(f'It may be that the system could not find the {textProgram} program.')
+		print(
+			f'If so, try installing the {textProgram} program or look for another one, like Open Office which can be found at:'
+		)
 		print('http://www.openoffice.org/')
 		print('Open office writer can then be started from the command line with the command "soffice -writer".')
 

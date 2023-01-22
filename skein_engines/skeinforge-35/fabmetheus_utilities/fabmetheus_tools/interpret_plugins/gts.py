@@ -58,7 +58,7 @@ def getFromGNUTriangulatedSurfaceText( gnuTriangulatedSurfaceText, triangleMesh 
 	for line in lines:
 		if len(line) > 0:
 			firstCharacter = line[0]
-			if firstCharacter != '#' and firstCharacter != '!':
+			if firstCharacter not in ['#', '!']:
 				linesWithoutComments.append(line)
 	splitLine = linesWithoutComments[0].split()
 	numberOfVertexes = int( splitLine[0] )
@@ -74,18 +74,14 @@ def getFromGNUTriangulatedSurfaceText( gnuTriangulatedSurfaceText, triangleMesh 
 	for edgeIndex in xrange( numberOfEdges ):
 		line = linesWithoutComments[ edgeIndex + edgeStart ]
 		splitLine = line.split()
-		vertexIndexes = []
-		for word in splitLine[ : 2 ]:
-			vertexIndexes.append( int(word) - 1 )
+		vertexIndexes = [int(word) - 1 for word in splitLine[ : 2 ]]
 		edge = face.Edge().getFromVertexIndexes( edgeIndex, vertexIndexes )
 		triangleMesh.edges.append( edge )
 	faceStart = edgeStart + numberOfEdges
 	for faceIndex in xrange( numberOfFaces ):
 		line = linesWithoutComments[ faceIndex + faceStart ]
 		splitLine = line.split()
-		edgeIndexes = []
-		for word in splitLine[ : 3 ]:
-			edgeIndexes.append( int(word) - 1 )
+		edgeIndexes = [int(word) - 1 for word in splitLine[ : 3 ]]
 		triangleMesh.faces.append( face.Face().getFromEdgeIndexes( edgeIndexes, triangleMesh.edges, faceIndex ) )
 	return triangleMesh
 

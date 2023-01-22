@@ -22,7 +22,7 @@ __license__ = 'GPL 3.0'
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get vector3 vertexes from attribute dictionary."
-	if derivation == None:
+	if derivation is None:
 		derivation = SquareDerivation()
 		derivation.setToXMLElement(xmlElement)
 	topRight = complex(derivation.topDemiwidth, derivation.demiheight)
@@ -36,7 +36,7 @@ def getGeometryOutput(derivation, xmlElement):
 	lineation.setClosedAttribute(derivation.revolutions, xmlElement)
 	complexLoop = [topRight, topLeft, bottomLeft, bottomRight]
 	originalLoop = complexLoop[:]
-	for revolution in xrange(1, derivation.revolutions):
+	for _ in xrange(1, derivation.revolutions):
 		complexLoop += originalLoop
 	spiral = lineation.Spiral(derivation.spiral, 0.25)
 	loop = []

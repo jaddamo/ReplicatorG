@@ -154,7 +154,7 @@ class Vector3:
 
 	def __repr__(self):
 		"Get the string representation of this Vector3."
-		return '(%s, %s, %s)' % ( self.x, self.y, self.z )
+		return f'({self.x}, {self.y}, {self.z})'
 
 	def __rdiv__(self, other):
 		"Get a new Vector3 by dividing each component of this one."
@@ -219,16 +219,12 @@ class Vector3:
 		"Determine if this is the zero vector."
 		if self.x != 0.0:
 			return False
-		if self.y != 0.0:
-			return False
-		return self.z == 0.0
+		return False if self.y != 0.0 else self.z == 0.0
 
 	def getNormalized(self):
 		"Get the normalized Vector3."
 		magnitude = abs(self)
-		if magnitude == 0.0:
-			return self.copy()
-		return self / magnitude
+		return self.copy() if magnitude == 0.0 else self / magnitude
 
 	def magnitudeSquared(self):
 		"Get the square of the magnitude of the Vector3."

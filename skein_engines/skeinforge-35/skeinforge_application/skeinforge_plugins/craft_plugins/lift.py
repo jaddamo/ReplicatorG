@@ -77,11 +77,13 @@ def getCraftedTextFromText( gcodeText, liftRepository = None ):
 	"Lift the preface gcode text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'lift'):
 		return gcodeText
-	if liftRepository == None:
+	if liftRepository is None:
 		liftRepository = settings.getReadRepository( LiftRepository() )
-	if not liftRepository.activateLift.value:
-		return gcodeText
-	return LiftSkein().getCraftedGcode( liftRepository, gcodeText )
+	return (
+		LiftSkein().getCraftedGcode(liftRepository, gcodeText)
+		if liftRepository.activateLift.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -137,7 +139,7 @@ class LiftSkein:
 		self.lines = archive.getTextLines(gcodeText)
 		self.parseInitialization()
 		self.oldLocation = None
-		if self.layerStep == None:
+		if self.layerStep is None:
 			self.layerStep = self.layerThickness
 		self.cuttingLift = self.layerStep * liftRepository.cuttingLiftOverLayerStep.value
 		self.setMaximumZ()

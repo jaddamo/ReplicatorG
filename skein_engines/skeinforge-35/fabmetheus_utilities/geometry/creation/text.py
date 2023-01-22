@@ -22,7 +22,7 @@ __license__ = 'GPL 3.0'
 
 def getGeometryOutput(derivation, xmlElement):
 	"Get vector3 vertexes from attribute dictionary."
-	if derivation == None:
+	if derivation is None:
 		derivation = TextDerivation()
 		derivation.setToXMLElement(xmlElement)
 	if derivation.textString == '':

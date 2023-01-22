@@ -5,11 +5,11 @@ import getopt
 import os
 
 def processCSV(filename, overrides):
-    csvlines = [line for line in open(filename, "r")]
+    csvlines = list(open(filename, "r"))
     try:
         csvfile = open(filename, 'w')
     except IOError:
-        print("The file " + filename + " cannot be opened for writing.")
+        print(f"The file {filename} cannot be opened for writing.")
         return False
 
     for line in csvlines:

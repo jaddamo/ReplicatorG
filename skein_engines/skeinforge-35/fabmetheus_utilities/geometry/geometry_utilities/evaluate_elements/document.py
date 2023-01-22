@@ -47,7 +47,7 @@ class Document:
 	def getElementByID(self, idKey):
 		"Get element by id."
 		elementByID = self.xmlElement.getXMLElementByImportID(idKey)
-		if elementByID == None:
+		if elementByID is None:
 			print('Warning, could not get elementByID in getElementByID in document for:')
 			print(idKey)
 			print(self.xmlElement)
@@ -56,7 +56,7 @@ class Document:
 	def getElementsByName(self, nameKey):
 		"Get element by name."
 		elementsByName = self.xmlElement.getXMLElementsByImportName(nameKey)
-		if elementsByName == None:
+		if elementsByName is None:
 			print('Warning, could not get elementsByName in getElementsByName in document for:')
 			print(nameKey)
 			print(self.xmlElement)

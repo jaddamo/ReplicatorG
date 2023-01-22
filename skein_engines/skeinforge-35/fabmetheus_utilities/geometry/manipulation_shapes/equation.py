@@ -140,7 +140,7 @@ def equateVertexesByFunction( equationFunction, points, prefix, revolutions, xml
 	equationResult = EquationResult( prefixedEquationName, revolutions, xmlElement )
 	for point in points:
 		returnValue = equationResult.getReturnValue(point)
-		if returnValue == None:
+		if returnValue is None:
 			print('Warning, returnValue in alterVertexesByEquation in equation is None for:')
 			print(point)
 			print(xmlElement)
@@ -170,7 +170,7 @@ class EquationResult:
 
 	def getReturnValue(self, point):
 		"Get return value."
-		if self.function == None:
+		if self.function is None:
 			return point
 		self.function.localDictionary['azimuth'] = math.degrees(math.atan2(point.y, point.x))
 		if len(self.points) > 0:

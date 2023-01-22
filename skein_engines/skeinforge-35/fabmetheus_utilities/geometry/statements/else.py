@@ -27,4 +27,3 @@ def processElse(xmlElement):
 
 def processXMLElement(xmlElement):
 	"Process the xml element."
-	pass

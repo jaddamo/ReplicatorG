@@ -88,11 +88,13 @@ def getCraftedTextFromText(fileName, svgText, repository=None):
 	"Bottom and convert an svgText."
 	if gcodec.isProcedureDoneOrFileIsEmpty(svgText, 'bottom'):
 		return svgText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository(BottomRepository())
-	if not repository.activateBottom.value:
-		return svgText
-	return BottomSkein().getCraftedGcode(fileName, repository, svgText)
+	return (
+		BottomSkein().getCraftedGcode(fileName, repository, svgText)
+		if repository.activateBottom.value
+		else svgText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -117,10 +119,10 @@ def getSliceElementZ(sliceElement):
 def setSliceElementZ(decimalPlacesCarried, sliceElement, sliceElementIndex, z):
 	"Set the slice element z."
 	roundedZ = euclidean.getRoundedToPlacesString(decimalPlacesCarried, z)
-	idValue = 'z:%s' % roundedZ
+	idValue = f'z:{roundedZ}'
 	sliceElement.attributeDictionary['id'] = idValue
 	textElement = sliceElement.getFirstChildWithClassName('text')
-	textElement.text = 'Layer %s, %s' % (sliceElementIndex, idValue)
+	textElement.text = f'Layer {sliceElementIndex}, {idValue}'
 
 def writeOutput(fileName=''):
 	"Bottom the carving of a gcode file."
@@ -138,7 +140,9 @@ def writeOutput(fileName=''):
 	print('The bottom tool has created the file:')
 	print(fileNameSuffix)
 	print('')
-	print('It took %s to craft the file.' % euclidean.getDurationString(time.time() - startTime))
+	print(
+		f'It took {euclidean.getDurationString(time.time() - startTime)} to craft the file.'
+	)
 	repository = BottomRepository()
 	settings.getReadRepository(repository)
 	settings.openSVGPage(fileNameSuffix, repository.svgViewer.value)

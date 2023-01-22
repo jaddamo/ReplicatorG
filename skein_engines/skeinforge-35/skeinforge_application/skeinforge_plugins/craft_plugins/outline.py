@@ -43,11 +43,13 @@ def getCraftedTextFromText( gcodeText, repository = None ):
 	"Outline a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'outline' ):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( OutlineRepository() )
-	if not repository.activateOutline.value:
-		return gcodeText
-	return OutlineSkein().getCraftedGcode( gcodeText, repository )
+	return (
+		OutlineSkein().getCraftedGcode(gcodeText, repository)
+		if repository.activateOutline.value
+		else gcodeText
+	)
 
 #def getRepositoryConstructor():
 #	"Get the repository constructor."
@@ -100,19 +102,19 @@ class OutlineSkein:
 		self.wantsOutline = False
 	
         def updateBoundingBox( self, splitLine ):
-                "Updates the information about the first layer bounding box"
-                location = gcodec.getLocationFromSplitLine(None, splitLine);
-                self.firstZ = location.z
-                if location.x < self.minX or self.firstFeed == -1:
-                        self.minX = location.x
-                elif location.x > self.maxX or self.firstFeed == -1:
-                        self.maxX = location.x
-                if location.y < self.minY or self.firstFeed == -1:
-                        self.minY = location.y
-                elif location.y > self.maxY or self.firstFeed == -1:
-                        self.maxY = location.y
-                if gcodec.getFeedRateMinute(self.firstFeed, splitLine) < self.firstFeed or self.firstFeed == -1:
-                        self.firstFeed = gcodec.getFeedRateMinute(self.firstFeed, splitLine)
+		"Updates the information about the first layer bounding box"
+		location = gcodec.getLocationFromSplitLine(None, splitLine);
+		self.firstZ = location.z
+		if location.x < self.minX or self.firstFeed == -1:
+			self.minX = location.x
+		elif location.x > self.maxX:
+			self.maxX = location.x
+		if location.y < self.minY or self.firstFeed == -1:
+			self.minY = location.y
+		elif location.y > self.maxY:
+			self.maxY = location.y
+		if gcodec.getFeedRateMinute(self.firstFeed, splitLine) < self.firstFeed or self.firstFeed == -1:
+		        self.firstFeed = gcodec.getFeedRateMinute(self.firstFeed, splitLine)
 
 	def getFirstLayerBoundingBox( self ):
                 "Find the bounding coords of the first layer, return as soon as subsequent layer is hit"

@@ -119,7 +119,7 @@ def getCraftedTextFromText( text, prefaceRepository = None ):
 	"Preface and convert an svg text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( text, 'preface'):
 		return text
-	if prefaceRepository == None:
+	if prefaceRepository is None:
 		prefaceRepository = settings.getReadRepository(PrefaceRepository())
 	return PrefaceSkein().getCraftedGcode(prefaceRepository, text)
 
@@ -214,7 +214,7 @@ class PrefaceSkein:
 
 	def addPreface( self, rotatedBoundaryLayer ):
 		"Add preface to the carve layer."
-		self.distanceFeedRate.addLine('(<layer> %s )' % rotatedBoundaryLayer.z ) # Indicate that a new layer is starting.
+		self.distanceFeedRate.addLine(f'(<layer> {rotatedBoundaryLayer.z} )')
 		if rotatedBoundaryLayer.rotation != None:
 			self.distanceFeedRate.addTagBracketedLine('bridgeRotation', str( rotatedBoundaryLayer.rotation ) ) # Indicate the bridge rotation.
 		for loop in rotatedBoundaryLayer.loops:

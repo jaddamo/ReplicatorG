@@ -35,7 +35,7 @@ def getManipulatedGeometryOutput(geometryOutput, xmlElement):
 def manipulateXMLElement(target, xmlElement):
 	"Manipulate the xml element."
 	translateMatrixTetragrid = matrix.getTranslateMatrixTetragrid('', xmlElement)
-	if translateMatrixTetragrid == None:
+	if translateMatrixTetragrid is None:
 		print('Warning, translateMatrixTetragrid was None in translate so nothing will be done for:')
 		print(xmlElement)
 		return

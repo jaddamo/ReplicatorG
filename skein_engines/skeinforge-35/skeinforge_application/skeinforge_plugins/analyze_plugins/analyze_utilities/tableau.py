@@ -51,7 +51,7 @@ def setStateNormalDisabled( active, widget ):
 
 def startMainLoopFromWindow( tableauWindow ):
 	"Display the tableau window and start the main loop."
-	if tableauWindow == None:
+	if tableauWindow is None:
 		print('Warning, tableauWindow in startMainLoopFromWindow in tableau is none, so the window will not be displayed.')
 	else:
 		tableauWindow.root.mainloop()
@@ -69,7 +69,7 @@ class ColoredLine:
 	
 	def __repr__(self):
 		"Get the string representation of this colored index line."
-		return '%s, %s, %s, %s' % ( self.colorName, self.begin, self.end, self.tagString )
+		return f'{self.colorName}, {self.begin}, {self.end}, {self.tagString}'
 
 
 class ExportCanvasDialog:
@@ -91,7 +91,7 @@ class ExportCanvasDialog:
 				return
 		exportCanvasPluginsFolderPath = archive.getAbsoluteFolderPath( os.path.dirname( __file__ ), 'export_canvas_plugins')
 		pluginModule = archive.getModuleWithDirectoryPath( exportCanvasPluginsFolderPath, self.name )
-		if pluginModule == None:
+		if pluginModule is None:
 			return None
 		pluginRepository = pluginModule.getNewRepository()
 		pluginRepository.setCanvasFileNameSuffix( self.canvas, self.fileName, self.suffix )
@@ -144,7 +144,7 @@ class TableauWindow:
 		self.root = settings.Tkinter.Tk()
 		self.gridPosition = settings.GridVertical( 0, 1 )
 		self.gridPosition.master = self.root
-		self.root.title( os.path.basename( skein.fileName ) + ' - ' + title )
+		self.root.title(f'{os.path.basename(skein.fileName)} - {title}')
 		self.rulingExtent = 24
 		self.rulingTargetSeparation = 150.0
 		self.screenSize = skein.screenSize
@@ -278,7 +278,9 @@ class TableauWindow:
 		try:
 			photoImage = settings.Tkinter.PhotoImage( file = os.path.join( self.imagesDirectoryPath, fileName ), master = gridPosition.master )
 		except:
-			print('Image %s was not found in the images directory, so a text button will be substituted.' % fileName )
+			print(
+				f'Image {fileName} was not found in the images directory, so a text button will be substituted.'
+			)
 		untilDotFileName = archive.getUntilDot(fileName)
 		self.photoImages[ untilDotFileName ] = photoImage
 		return untilDotFileName
@@ -303,7 +305,9 @@ class TableauWindow:
 		self.relayYview( settings.Tkinter.MOVETO, center.imag - self.canvasScreenCenter.imag )
 		self.root.withdraw()
 		self.root.update_idletasks()
-		movedGeometryString = '%sx%s+%s' % ( self.root.winfo_reqwidth(), self.root.winfo_reqheight(), '0+0')
+		movedGeometryString = (
+			f'{self.root.winfo_reqwidth()}x{self.root.winfo_reqheight()}+0+0'
+		)
 		self.root.geometry( movedGeometryString )
 
 	def button1(self, event):
@@ -348,12 +352,6 @@ class TableauWindow:
 		"Destroy all the dialog windows."
 		settings.writeSettings(self.repository)
 		return
-		for menuEntity in self.repository.menuEntities:
-			lowerName = menuEntity.name.lower()
-			if lowerName in settings.globalRepositoryDialogListTable:
-				globalRepositoryDialogValues = settings.globalRepositoryDialogListTable[ lowerName ]
-				for globalRepositoryDialogValue in globalRepositoryDialogValues:
-					settings.quitWindow( globalRepositoryDialogValue.root )
 
 	def destroyMouseToolRaiseMouseButtons(self):
 		"Destroy the mouse tool and raise the mouse buttons."
@@ -416,10 +414,14 @@ class TableauWindow:
 
 	def getEntityFromName(self, name):
 		"Get the entity of the given name."
-		for entity in self.repository.displayEntities:
-			if entity.name == name:
-				return entity
-		return None
+		return next(
+			(
+				entity
+				for entity in self.repository.displayEntities
+				if entity.name == name
+			),
+			None,
+		)
 
 	def getPhotoButtonGridIncrement( self, commandFunction, fileName, gridPosition ):
 		"Get a PhotoImage button, grid the button and increment the grid position."
@@ -518,9 +520,7 @@ class TableauWindow:
 	def limitIndexSetArrowMouseDeleteCanvas(self):
 		"Limit the index, set the arrow type, and delete all the canvas items."
 		self.limitIndex()
-		self.arrowType = None
-		if self.repository.drawArrows.value:
-			self.arrowType = 'last'
+		self.arrowType = 'last' if self.repository.drawArrows.value else None
 		self.canvas.delete( settings.Tkinter.ALL )
 
 	def lineEntryReturnPressed(self, event=None):
@@ -742,7 +742,7 @@ class TableauWindow:
 
 	def updateMouseToolIfSelection(self):
 		"Update the mouse tool if it is a selection tool."
-		if self.mouseTool == None:
+		if self.mouseTool is None:
 			return
 		if self.mouseTool.isSelectionTool():
 			self.mouseTool.update()

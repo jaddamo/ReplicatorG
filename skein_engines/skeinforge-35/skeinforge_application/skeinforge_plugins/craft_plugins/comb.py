@@ -84,11 +84,13 @@ def getCraftedTextFromText( gcodeText, combRepository = None ):
 	"Comb a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'comb'):
 		return gcodeText
-	if combRepository == None:
+	if combRepository is None:
 		combRepository = settings.getReadRepository( CombRepository() )
-	if not combRepository.activateComb.value:
-		return gcodeText
-	return CombSkein().getCraftedGcode( combRepository, gcodeText )
+	return (
+		CombSkein().getCraftedGcode(combRepository, gcodeText)
+		if combRepository.activateComb.value
+		else gcodeText
+	)
 
 def getInsideness(path, loop):
 	"Get portion of the path which is inside the loop."
@@ -185,19 +187,22 @@ class CombSkein:
 	def addIfTravel( self, splitLine ):
 		"Add travel move around loops if the extruder is off."
 		location = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
-		if not self.extruderActive and self.oldLocation != None:
-			if len( self.getBoundaries() ) > 0:
-				highestZ = max( location.z, self.oldLocation.z )
-				self.addGcodePathZ( self.travelFeedRatePerMinute, self.getPathsBetween( self.oldLocation.dropAxis(2), location.dropAxis(2) ), highestZ )
+		if (
+			not self.extruderActive
+			and self.oldLocation != None
+			and len(self.getBoundaries()) > 0
+		):
+			highestZ = max( location.z, self.oldLocation.z )
+			self.addGcodePathZ( self.travelFeedRatePerMinute, self.getPathsBetween( self.oldLocation.dropAxis(2), location.dropAxis(2) ), highestZ )
 		self.oldLocation = location
 
 	def addToLoop(self, location):
 		"Add a location to loop."
-		if self.layer == None:
-			if not self.oldZ in self.layerTable:
+		if self.layer is None:
+			if self.oldZ not in self.layerTable:
 				self.layerTable[ self.oldZ ] = []
 			self.layer = self.layerTable[ self.oldZ ]
-		if self.boundaryLoop == None:
+		if self.boundaryLoop is None:
 			self.boundaryLoop = [] #starting with an empty array because a closed loop does not have to restate its beginning
 			self.layer.append( self.boundaryLoop )
 		if self.boundaryLoop != None:
@@ -216,9 +221,7 @@ class CombSkein:
 
 	def getBoundaries(self):
 		"Get boundaries for the layer."
-		if self.layerZ in self.layerTable:
-			return self.layerTable[ self.layerZ ]
-		return []
+		return self.layerTable[ self.layerZ ] if self.layerZ in self.layerTable else []
 
 	def getCraftedGcode( self, combRepository, gcodeText ):
 		"Parse gcode text and store the comb gcode."
@@ -271,22 +274,22 @@ class CombSkein:
 			if endIndex < len(shortestPath):
 				end = shortestPath[endIndex]
 				centerEnd = intercircle.getWiddershinsByLength(end, center, self.combInset)
-			if centerPerpendicular == None:
+			if centerPerpendicular is None:
 				centerPerpendicular = centerEnd
 			elif centerEnd != None:
 				centerPerpendicular = 0.5 * (centerPerpendicular + centerEnd)
 			between = None
-			if centerPerpendicular == None:
+			if centerPerpendicular is None:
 				between = center
-			if between == None:
+			if between is None:
 				centerSideWiddershins = center + centerPerpendicular
 				if euclidean.isPointInsideLoop(loop, centerSideWiddershins) == loopWiddershins:
 					between = centerSideWiddershins
-			if between == None:
+			if between is None:
 				centerSideClockwise = center - centerPerpendicular
 				if euclidean.isPointInsideLoop(loop, centerSideClockwise) == loopWiddershins:
 					between = centerSideClockwise
-			if between == None:
+			if between is None:
 				between = center
 			pathBetween.append(between)
 		return pathBetween
@@ -410,18 +413,18 @@ class CombSkein:
 		if len(splitLine) < 1:
 			return
 		firstWord = splitLine[0]
-		if firstWord == 'G1':
+		if firstWord == '(<layer>':
+			self.layerCount.printProgressIncrement('comb')
+			self.nextLayerZ = float(splitLine[1])
+			if self.layerZ is None:
+				self.layerZ = self.nextLayerZ
+		elif firstWord == 'G1':
 			self.addIfTravel(splitLine)
 			self.layerZ = self.nextLayerZ
 		elif firstWord == 'M101':
 			self.extruderActive = True
 		elif firstWord == 'M103':
 			self.extruderActive = False
-		elif firstWord == '(<layer>':
-			self.layerCount.printProgressIncrement('comb')
-			self.nextLayerZ = float(splitLine[1])
-			if self.layerZ == None:
-				self.layerZ = self.nextLayerZ
 		self.distanceFeedRate.addLine(line)
 
 

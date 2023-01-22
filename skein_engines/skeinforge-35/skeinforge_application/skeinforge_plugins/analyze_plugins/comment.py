@@ -111,12 +111,12 @@ class CommentSkein:
 
 	def addComment( self, comment ):
 		"Add a gcode comment and a newline to the output."
-		self.output.write( "( " + comment + " )\n" )
+		self.output.write(f"( {comment}" + " )\n")
 
 	def linearMove( self, splitLine ):
 		"Comment a linear move."
 		location = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
-		self.addComment( "Linear move to " + str( location ) + "." );
+		self.addComment(f"Linear move to {str(location)}.");
 		self.oldLocation = location
 
 	def parseGcode( self, gcodeText ):
@@ -135,14 +135,14 @@ class CommentSkein:
 			self.linearMove(splitLine)
 		elif firstWord == 'G2':
 			self.setHelicalMoveEndpoint(splitLine)
-			self.addComment( "Helical clockwise move to " + str( self.oldLocation ) + "." )
-		elif firstWord == 'G3':
-			self.setHelicalMoveEndpoint(splitLine)
-			self.addComment( "Helical counterclockwise move to " + str( self.oldLocation ) + "." )
+			self.addComment(f"Helical clockwise move to {str(self.oldLocation)}.")
 		elif firstWord == 'G21':
 			self.addComment( "Set units to mm." )
 		elif firstWord == 'G28':
 			self.addComment( "Start at home." )
+		elif firstWord == 'G3':
+			self.setHelicalMoveEndpoint(splitLine)
+			self.addComment(f"Helical counterclockwise move to {str(self.oldLocation)}.")
 		elif firstWord == 'G90':
 			self.addComment( "Set positioning to absolute." )
 		elif firstWord == 'M101':
@@ -152,7 +152,9 @@ class CommentSkein:
 		elif firstWord == 'M103':
 			self.addComment( "Extruder off." )
 		elif firstWord == 'M104':
-			self.addComment( "Set temperature to " + str( gcodec.getDoubleAfterFirstLetter(splitLine[1]) ) + " C." )
+			self.addComment(
+				f"Set temperature to {str(gcodec.getDoubleAfterFirstLetter(splitLine[1]))} C."
+			)
 		elif firstWord == 'M105':
 			self.addComment( "Custom code for temperature reading." )
 		elif firstWord == 'M106':
@@ -160,12 +162,14 @@ class CommentSkein:
 		elif firstWord == 'M107':
 			self.addComment( "Turn fan off." )
 		elif firstWord == 'M108':
-			self.addComment( "Set extruder speed to " + str( gcodec.getDoubleAfterFirstLetter(splitLine[1]) ) + "." )
+			self.addComment(
+				f"Set extruder speed to {str(gcodec.getDoubleAfterFirstLetter(splitLine[1]))}."
+			)
 		self.output.write(line + '\n')
 
 	def setHelicalMoveEndpoint( self, splitLine ):
 		"Get the endpoint of a helical move."
-		if self.oldLocation == None:
+		if self.oldLocation is None:
 			print( "A helical move is relative and therefore must not be the first move of a gcode file." )
 			return
 		location = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)

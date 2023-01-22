@@ -42,7 +42,7 @@ def getArcPath(xmlElement):
 		pointComplex = arcComplexes[pointIndex]
 		z += incrementZ
 		path.append(Vector3(pointComplex.real, pointComplex.imag, z))
-	if len(path) > 0:
+	if path:
 		path[-1] = end
 	return path
 

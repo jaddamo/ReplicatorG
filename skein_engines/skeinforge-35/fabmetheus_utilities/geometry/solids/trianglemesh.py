@@ -32,7 +32,7 @@ def addEdgePair( edgePairTable, edges, faceEdgeIndex, remainingEdgeIndex, remain
 	"Add edge pair to the edge pair table."
 	if faceEdgeIndex == remainingEdgeIndex:
 		return
-	if not faceEdgeIndex in remainingEdgeTable:
+	if faceEdgeIndex not in remainingEdgeTable:
 		return
 	edgePair = EdgePair().getFromIndexesEdges( [ remainingEdgeIndex, faceEdgeIndex ], edges )
 	edgePairTable[ str( edgePair ) ] = edgePair
@@ -67,13 +67,21 @@ def addFacesByConvexBottomTopLoop(faces, indexedLoopBottom, indexedLoopTop):
 		indexedLoopIndexEnd = (indexedLoopIndex + 1) % len(indexedLoopBottom)
 		indexedConvex = []
 		if len(indexedLoopBottom) > 1:
-			indexedConvex.append(indexedLoopBottom[indexedLoopIndex])
-			indexedConvex.append(indexedLoopBottom[(indexedLoopIndex + 1) % len(indexedLoopBottom)])
+			indexedConvex.extend(
+				(
+					indexedLoopBottom[indexedLoopIndex],
+					indexedLoopBottom[(indexedLoopIndex + 1) % len(indexedLoopBottom)],
+				)
+			)
 		else:
 			indexedConvex.append(indexedLoopBottom[0])
 		if len(indexedLoopTop) > 1:
-			indexedConvex.append(indexedLoopTop[(indexedLoopIndex + 1) % len(indexedLoopTop)])
-			indexedConvex.append(indexedLoopTop[indexedLoopIndex])
+			indexedConvex.extend(
+				(
+					indexedLoopTop[(indexedLoopIndex + 1) % len(indexedLoopTop)],
+					indexedLoopTop[indexedLoopIndex],
+				)
+			)
 		else:
 			indexedConvex.append(indexedLoopTop[0])
 		addFacesByConvex(faces, indexedConvex)
@@ -104,10 +112,9 @@ def addFacesByLoop(faces, indexedLoop):
 		end = indexedLoop[(pointIndex + 2) % len(indexedLoop)]
 		normal = euclidean.getNormalWeighted(point, center, end)
 		if abs(normal) > 0.0:
-			if lastNormal != None:
-				if lastNormal.dot(normal) < 0.0:
-					addFacesByConcaveLoop(faces, indexedLoop)
-					return
+			if lastNormal != None and lastNormal.dot(normal) < 0.0:
+				addFacesByConcaveLoop(faces, indexedLoop)
+				return
 			lastNormal = normal
 #	totalNormal = Vector3()
 #	for pointIndex, point in enumerate(indexedLoop):
@@ -254,9 +261,8 @@ def getBridgeDirection( belowLoops, layerLoops, layerThickness ):
 			bridgeRotation += getOverhangDirection( belowOutsetLoops, loop[ previousIndex ], loop[pointIndex] )
 	if abs( bridgeRotation ) < 0.75 * layerThickness:
 		return None
-	else:
-		bridgeRotation /= abs( bridgeRotation )
-		return cmath.sqrt( bridgeRotation )
+	bridgeRotation /= abs( bridgeRotation )
+	return cmath.sqrt( bridgeRotation )
 
 def getBridgeLoops( layerThickness, loop ):
 	"Get the inset bridge loops from the loop."
@@ -266,10 +272,15 @@ def getBridgeLoops( layerThickness, loop ):
 	centers = intercircle.getCentersFromLoop( loop, slightlyGreaterThanHalfWidth )
 	for center in centers:
 		extrudateLoop = intercircle.getSimplifiedInsetFromClockwiseLoop( center, halfWidth )
-		if intercircle.isLargeSameDirection( extrudateLoop, center, halfWidth ):
-			if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins(loop):
-				extrudateLoop.reverse()
-				extrudateLoops.append( extrudateLoop )
+		if intercircle.isLargeSameDirection(
+			extrudateLoop, center, halfWidth
+		) and euclidean.isPathInsideLoop(
+			loop, extrudateLoop
+		) == euclidean.isWiddershins(
+			loop
+		):
+			extrudateLoop.reverse()
+			extrudateLoops.append( extrudateLoop )
 	return extrudateLoops
 
 def getCarveIntersectionFromEdge(edge, vertexes, z):
@@ -331,11 +342,12 @@ def getIndexedCellLoopsFromIndexedGrid( grid ):
 		rowTop = grid[ rowIndex + 1 ]
 		for columnIndex in xrange( len( rowBottom ) - 1 ):
 			columnIndexEnd = columnIndex + 1
-			indexedConvex = []
-			indexedConvex.append( rowBottom[ columnIndex ] )
-			indexedConvex.append( rowBottom[ columnIndex + 1 ] )
-			indexedConvex.append( rowTop[ columnIndex + 1 ] )
-			indexedConvex.append( rowTop[ columnIndex ] )
+			indexedConvex = [
+				rowBottom[columnIndex],
+				rowBottom[columnIndex + 1],
+				rowTop[columnIndex + 1],
+				rowTop[columnIndex],
+			]
 			indexedCellLoops.append( indexedConvex )
 	return indexedCellLoops
 
@@ -434,10 +446,7 @@ def getLoopsInOrderOfArea( compareAreaFunction, loops ):
 		loopArea = LoopArea(loop)
 		loopAreas.append( loopArea )
 	loopAreas.sort( compareAreaFunction )
-	loopsInDescendingOrderOfArea = []
-	for loopArea in loopAreas:
-		loopsInDescendingOrderOfArea.append( loopArea.loop )
-	return loopsInDescendingOrderOfArea
+	return [loopArea.loop for loopArea in loopAreas]
 
 def getLoopsWithCorners( corners, importRadius, loops, pointTable ):
 	"Add corners to the loops."
@@ -463,10 +472,11 @@ def getOverhangDirection( belowOutsetLoops, segmentBegin, segmentEnd ):
 	segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
 	segmentBegin = segmentYMirror * segmentBegin
 	segmentEnd = segmentYMirror * segmentEnd
-	solidXIntersectionList = []
 	y = segmentBegin.imag
-	solidXIntersectionList.append( euclidean.XIntersectionIndex( - 1.0, segmentBegin.real ) )
-	solidXIntersectionList.append( euclidean.XIntersectionIndex( - 1.0, segmentEnd.real ) )
+	solidXIntersectionList = [
+		euclidean.XIntersectionIndex(-1.0, segmentBegin.real),
+		euclidean.XIntersectionIndex(-1.0, segmentEnd.real),
+	]
 	for belowLoopIndex in xrange( len( belowOutsetLoops ) ):
 		belowLoop = belowOutsetLoops[ belowLoopIndex ]
 		rotatedOutset = euclidean.getPointsRoundZAxis( segmentYMirror, belowLoop )
@@ -479,10 +489,7 @@ def getOverhangDirection( belowOutsetLoops, segmentBegin, segmentEnd ):
 
 def getOverlapRatio( loop, pointTable ):
 	"Get the overlap ratio between the loop and the point table."
-	numberOfOverlaps = 0
-	for point in loop:
-		if point in pointTable:
-			numberOfOverlaps += 1
+	numberOfOverlaps = sum(point in pointTable for point in loop)
 	return float( numberOfOverlaps ) / float(len(loop))
 
 def getPath( edges, pathIndexes, loop, z ):
@@ -515,19 +522,16 @@ def getPillarOutput(loops):
 
 def getPillarsOutput(loopLists):
 	"Get pillars output."
-	pillarsOutput = []
-	for loopList in loopLists:
-		pillarsOutput.append(getPillarOutput(loopList))
+	pillarsOutput = [getPillarOutput(loopList) for loopList in loopLists]
 	return getUnifiedOutput(pillarsOutput)
 
 def getRemainingEdgeTable(edges, vertexes, z):
 	"Get the remaining edge hashtable."
 	remainingEdgeTable = {}
-	if len( edges ) > 0:
-		if edges[0].zMinimum == None:
-			for edge in edges:
-				edge.zMinimum = min( vertexes[ edge.vertexIndexes[0] ].z, vertexes[ edge.vertexIndexes[1] ].z )
-				edge.zMaximum = max( vertexes[ edge.vertexIndexes[0] ].z, vertexes[ edge.vertexIndexes[1] ].z )
+	if len(edges) > 0 and edges[0].zMinimum is None:
+		for edge in edges:
+			edge.zMinimum = min( vertexes[ edge.vertexIndexes[0] ].z, vertexes[ edge.vertexIndexes[1] ].z )
+			edge.zMaximum = max( vertexes[ edge.vertexIndexes[0] ].z, vertexes[ edge.vertexIndexes[1] ].z )
 	for edgeIndex in xrange( len( edges ) ):
 		edge = edges[ edgeIndex ]
 		if ( edge.zMinimum < z ) and ( edge.zMaximum > z ):
@@ -566,9 +570,7 @@ def getUnifiedOutput(outputs):
 	"Get unified output."
 	if len(outputs) < 1:
 		return {'trianglemesh' : {'vertex' : [], 'face' : []}}
-	if len(outputs) < 2:
-		return outputs[0]
-	return {'union' : {'shapes' : outputs}}
+	return outputs[0] if len(outputs) < 2 else {'union' : {'shapes' : outputs}}
 
 def getWideAnglePointIndex(loop):
 	"Get a point index which has a wide enough angle, most point indexes have a wide enough angle, this is just to make sure."
@@ -611,9 +613,8 @@ def isPathAdded( edges, faces, loops, remainingEdgeTable, vertexes, z ):
 	"Get the path indexes around a triangle mesh carve and add the path to the flat loops."
 	if len( remainingEdgeTable ) < 1:
 		return False
-	pathIndexes = []
 	remainingEdgeIndexKey = remainingEdgeTable.keys()[0]
-	pathIndexes.append( remainingEdgeIndexKey )
+	pathIndexes = [remainingEdgeIndexKey]
 	del remainingEdgeTable[remainingEdgeIndexKey]
 	nextEdgeIndexAroundZ = getNextEdgeIndexAroundZ( edges[remainingEdgeIndexKey], faces, remainingEdgeTable )
 	while nextEdgeIndexAroundZ != - 1:
@@ -621,7 +622,9 @@ def isPathAdded( edges, faces, loops, remainingEdgeTable, vertexes, z ):
 		del remainingEdgeTable[ nextEdgeIndexAroundZ ]
 		nextEdgeIndexAroundZ = getNextEdgeIndexAroundZ( edges[ nextEdgeIndexAroundZ ], faces, remainingEdgeTable )
 	if len( pathIndexes ) < 3:
-		print( "Dangling edges, will use intersecting circles to get import layer at height %s" % z )
+		print(
+			f"Dangling edges, will use intersecting circles to get import layer at height {z}"
+		)
 		del loops[:]
 		return False
 	loops.append( getPath( edges, pathIndexes, vertexes, z ) )
@@ -659,7 +662,7 @@ class LoopArea:
 
 	def __repr__(self):
 		"Get the string representation of this flat path."
-		return '%s, %s' % ( self.area, self.loop )
+		return f'{self.area}, {self.loop}'
 
 
 class TriangleMesh( group.Group ):
@@ -741,13 +744,13 @@ class TriangleMesh( group.Group ):
 
 	def getTransformedVertexes(self):
 		"Get all transformed vertexes."
-		if self.xmlElement == None:
+		if self.xmlElement is None:
 			return dictionary.getAllVertexes(self.vertexes, self)
 		chainTetragrid = self.getMatrixChainTetragrid()
 		if self.oldChainTetragrid != chainTetragrid:
 			self.oldChainTetragrid = chainTetragrid
 			self.transformedVertexes = None
-		if self.transformedVertexes == None:
+		if self.transformedVertexes is None:
 			self.setEdgesForAllFaces()
 			self.transformedVertexes = matrix.getTransformedVector3s(chainTetragrid, self.vertexes)
 		return dictionary.getAllTransformedVertexes(self.transformedVertexes, self)
@@ -767,14 +770,14 @@ class TriangleMesh( group.Group ):
 		rotatedBoundaryLayer = euclidean.RotatedLoopLayer(z)
 		self.rotatedBoundaryLayers.append( rotatedBoundaryLayer )
 		rotatedBoundaryLayer.loops = self.getLoopsFromMesh( getEmptyZ( self, z ) )
-		if self.bridgeLayerThickness == None:
+		if self.bridgeLayerThickness is None:
 			return z + self.layerThickness
 		allExtrudateLoops = []
 		for loop in rotatedBoundaryLayer.loops:
 			allExtrudateLoops += getBridgeLoops( self.layerThickness, loop )
 		rotatedBoundaryLayer.rotation = getBridgeDirection( self.belowLoops, allExtrudateLoops, self.layerThickness )
 		self.belowLoops = allExtrudateLoops
-		if rotatedBoundaryLayer.rotation == None:
+		if rotatedBoundaryLayer.rotation is None:
 			return z + self.layerThickness
 		return z + self.bridgeLayerThickness
 

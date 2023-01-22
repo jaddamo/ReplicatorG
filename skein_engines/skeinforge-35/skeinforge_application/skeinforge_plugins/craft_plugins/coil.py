@@ -79,11 +79,13 @@ def getCraftedTextFromText(gcodeText, repository=None):
 	"Coil a gcode linear move gcodeText."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'coil'):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( CoilRepository() )
-	if not repository.activateCoil.value:
-		return gcodeText
-	return CoilSkein().getCraftedGcode(gcodeText, repository)
+	return (
+		CoilSkein().getCraftedGcode(gcodeText, repository)
+		if repository.activateCoil.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -128,7 +130,7 @@ class CoilSkein:
 
 	def addCoilLayer( self, boundaryLayers, radius, z ):
 		"Add a coil layer."
-		self.distanceFeedRate.addLine('(<layer> %s )' % z ) # Indicate that a new layer is starting.
+		self.distanceFeedRate.addLine(f'(<layer> {z} )')
 		self.distanceFeedRate.addLine('(<surroundingLoop>)')
 		thread = []
 		for boundaryLayerIndex in xrange(1, len(boundaryLayers) - 1):
@@ -150,9 +152,7 @@ class CoilSkein:
 		startOutset = self.repository.minimumToolDistance.value + halfLayerThickness
 		startZ = self.boundaryLayers[0].z + halfLayerThickness
 		zRange = self.boundaryLayers[-1].z - self.boundaryLayers[0].z
-		zIncrement = 0.0
-		if zRange >= 0.0:
-			zIncrement = zRange / numberOfLayersFloat
+		zIncrement = zRange / numberOfLayersFloat if zRange >= 0.0 else 0.0
 		for layerIndex in xrange( numberOfLayers ):
 			settings.printProgressByNumber(layerIndex, numberOfLayers, 'coil')
 			boundaryLayers = self.boundaryLayers
@@ -221,7 +221,7 @@ class CoilSkein:
 				boundaryLoop = None
 			elif firstWord == '(<boundaryPoint>':
 				location = gcodec.getLocationFromSplitLine(None, splitLine)
-				if boundaryLoop == None:
+				if boundaryLoop is None:
 					boundaryLoop = []
 					boundaryLayer.loops.append( boundaryLoop )
 				boundaryLoop.append( location.dropAxis(2) )

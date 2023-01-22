@@ -66,7 +66,7 @@ class XMLBooleanGeometryProcessor():
 		self.manipulationPathDictionary = archive.getGeometryDictionary('manipulation_paths')
 		self.manipulationShapeDictionary = archive.getGeometryDictionary('manipulation_shapes')
 		self.namePathDictionary = {}
-		self.namePathDictionary.update(evaluate.globalCreationDictionary)
+		self.namePathDictionary |= evaluate.globalCreationDictionary
 		self.namePathDictionary.update(archive.getGeometryDictionary('manipulation'))
 		self.namePathDictionary.update(self.manipulationEvaluatorDictionary)
 		self.namePathDictionary.update(self.manipulationPathDictionary)
@@ -86,7 +86,7 @@ class XMLBooleanGeometryProcessor():
 		if lowerClassName not in self.namePathDictionary:
 			return None
 		pluginModule = archive.getModuleWithPath( self.namePathDictionary[ lowerClassName ] )
-		if pluginModule == None:
+		if pluginModule is None:
 			return None
 		xmlElement.className = lowerClassName
 		return pluginModule.convertXMLElement(geometryOutput[ firstKey ], xmlElement)
@@ -109,7 +109,7 @@ class XMLBooleanGeometryProcessor():
 		if lowerClassName not in self.namePathDictionary:
 			return None
 		pluginModule = archive.getModuleWithPath(self.namePathDictionary[lowerClassName])
-		if pluginModule == None:
+		if pluginModule is None:
 			return None
 		try:
 			return pluginModule.processXMLElement(xmlElement)

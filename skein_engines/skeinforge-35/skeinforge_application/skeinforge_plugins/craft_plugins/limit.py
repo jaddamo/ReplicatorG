@@ -86,11 +86,13 @@ def getCraftedTextFromText(gcodeText, repository=None):
 	'Limit a gcode text.'
 	if gcodec.isProcedureDoneOrFileIsEmpty(gcodeText, 'limit'):
 		return gcodeText
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository(LimitRepository())
-	if not repository.activateLimit.value:
-		return gcodeText
-	return LimitSkein().getCraftedGcode(gcodeText, repository)
+	return (
+		LimitSkein().getCraftedGcode(gcodeText, repository)
+		if repository.activateLimit.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	'Get the repository constructor.'
@@ -143,7 +145,7 @@ class LimitSkein:
 
 	def getLimitedInitialMovement(self, line, splitLine):
 		'Get a limited linear movement.'
-		if self.oldLocation == None:
+		if self.oldLocation is None:
 			line = self.distanceFeedRate.getLineWithFeedRate(60.0 * self.repository.maximumInitialFeedRate.value, line, splitLine)
 		return line
 
@@ -158,7 +160,7 @@ class LimitSkein:
 	def getZLimitedLineArc(self, line, splitLine):
 		'Get a replaced z limited gcode arc movement line.'
 		self.feedRateMinute = gcodec.getFeedRateMinute(self.feedRateMinute, splitLine)
-		if self.feedRateMinute == None or self.oldLocation == None:
+		if self.feedRateMinute is None or self.oldLocation is None:
 			return line
 		relativeLocation = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
 		self.oldLocation += relativeLocation
@@ -171,7 +173,7 @@ class LimitSkein:
 		self.feedRateMinute = gcodec.getFeedRateMinute(self.feedRateMinute, splitLine)
 		if location == self.oldLocation:
 			return ''
-		if self.feedRateMinute == None or self.oldLocation == None:
+		if self.feedRateMinute is None or self.oldLocation is None:
 			return line
 		deltaZ = abs(location.z - self.oldLocation.z)
 		distance = abs(location - self.oldLocation)
@@ -205,7 +207,7 @@ class LimitSkein:
 			line = self.getLimitedInitialMovement(line, splitLine)
 			line = self.getZLimitedLineLinear(line, location, splitLine)
 			self.oldLocation = location
-		elif firstWord == 'G2' or firstWord == 'G3':
+		elif firstWord in ['G2', 'G3']:
 			line = self.getZLimitedLineArc(line, splitLine)
 		elif firstWord == 'M101':
 			self.maximumZFeedRatePerSecond = self.maximumZDrillFeedRatePerSecond

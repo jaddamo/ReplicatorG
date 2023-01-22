@@ -281,7 +281,7 @@ def getWindowAnalyzeFileGivenText( fileName, gcodeText, repository=None):
 	"Display a skeiniso gcode file for a gcode file."
 	if gcodeText == '':
 		return None
-	if repository == None:
+	if repository is None:
 		repository = settings.getReadRepository( SkeinisoRepository() )
 	skeinWindow = getWindowGivenTextRepository( fileName, gcodeText, repository )
 	skeinWindow.updateDeiconify()
@@ -385,12 +385,12 @@ class SkeinisoSkein:
 
 	def addToPath( self, line, location ):
 		'Add a point to travel and maybe extrusion.'
-		if self.oldLocation == None:
+		if self.oldLocation is None:
 			return
 		begin = self.scale * self.oldLocation - self.scaleCenterBottom
 		end = self.scale * location - self.scaleCenterBottom
-		displayString = '%s %s' % ( self.lineIndex + 1, line )
-		tagString = 'colored_line_index: %s %s' % ( len( self.skeinPane.coloredLines ), len( self.skeinPanes ) - 1 )
+		displayString = f'{self.lineIndex + 1} {line}'
+		tagString = f'colored_line_index: {len(self.skeinPane.coloredLines)} {len(self.skeinPanes) - 1}'
 		coloredLine = tableau.ColoredLine( begin, '', displayString, end, tagString )
 		coloredLine.z = location.z
 		self.skeinPane.coloredLines.append( coloredLine )
@@ -398,9 +398,7 @@ class SkeinisoSkein:
 
 	def getLayerTop(self):
 		"Get the layer top."
-		if len( self.layerTops ) < 1:
-			return - 9123456789123.9
-		return self.layerTops[-1]
+		return - 9123456789123.9 if len( self.layerTops ) < 1 else self.layerTops[-1]
 
 	def getLayerZoneIndex( self, z ):
 		"Get the layer zone index."
@@ -426,7 +424,7 @@ class SkeinisoSkein:
 		"Parse a gcode line and add it to the vector output."
 		if self.isThereALayerStartWord:
 			return firstWord == '(<layer>'
-		if firstWord != 'G1' and firstWord != 'G2' and firstWord != 'G3':
+		if firstWord not in ['G1', 'G2', 'G3']:
 			return False
 		location = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
 		if location.z - self.oldZ > 0.1:
@@ -444,7 +442,7 @@ class SkeinisoSkein:
 
 	def linearMove( self, line, location ):
 		"Get statistics for a linear move."
-		if self.skeinPane == None:
+		if self.skeinPane is None:
 			return
 		self.addToPath( line, location )
 
@@ -522,8 +520,12 @@ class SkeinisoSkein:
 		self.scaleCenterBottom = self.scale * self.centerBottom
 		self.scaleCornerHigh = self.scale * self.cornerHigh.dropAxis(2)
 		self.scaleCornerLow = self.scale * self.cornerLow.dropAxis(2)
-		print( "The lower left corner of the skeiniso window is at %s, %s" % ( self.cornerLow.x, self.cornerLow.y ) )
-		print( "The upper right corner of the skeiniso window is at %s, %s" % ( self.cornerHigh.x, self.cornerHigh.y ) )
+		print(
+			f"The lower left corner of the skeiniso window is at {self.cornerLow.x}, {self.cornerLow.y}"
+		)
+		print(
+			f"The upper right corner of the skeiniso window is at {self.cornerHigh.x}, {self.cornerHigh.y}"
+		)
 		self.cornerImaginaryTotal = self.cornerHigh.y + self.cornerLow.y
 		margin = complex( 5.0, 5.0 )
 		self.marginCornerLow = self.scaleCornerLow - margin
@@ -579,7 +581,7 @@ class SkeinisoSkein:
 			self.isPerimeter = False
 		elif firstWord == '(<surroundingLoop>)':
 			self.hasASurroundingLoopBeenReached = True
-		if firstWord == 'G2' or firstWord == 'G3':
+		if firstWord in ['G2', 'G3']:
 			relativeLocation = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
 			relativeLocation.z = 0.0
 			location = self.oldLocation + relativeLocation
@@ -601,7 +603,7 @@ class SkeinisoSkein:
 		red = settings.getWidthHex( int( colorTuple[0] * multiplier ), 2 )
 		green = settings.getWidthHex( int( colorTuple[1] * multiplier ), 2 )
 		blue = settings.getWidthHex( int( colorTuple[2] * multiplier ), 2 )
-		coloredLine.colorName = '#%s%s%s' % ( red, green, blue )
+		coloredLine.colorName = f'#{red}{green}{blue}'
 
 	def setColoredThread( self, colorTuple, lineList ):
 		'Set the colored thread, then move it to the line list and stipple of the colored line.'
@@ -649,12 +651,48 @@ class SkeinWindow( tableau.TableauWindow ):
 		negativeHalfCenterModel = - self.halfCenterModel
 		roundedHalfCenter = euclidean.getThreeSignificantFigures( self.halfCenterModel )
 		roundedNegativeHalfCenter = euclidean.getThreeSignificantFigures( negativeHalfCenterModel )
-		self.negativeAxisLineX = tableau.ColoredLine( Vector3(), 'darkorange', None, Vector3( negativeHalfCenter ), 'X Negative Axis: Origin -> %s,0,0' % roundedNegativeHalfCenter )
-		self.negativeAxisLineY = tableau.ColoredLine( Vector3(), 'gold', None, Vector3( 0.0, negativeHalfCenter ), 'Y Negative Axis: Origin -> 0,%s,0' % roundedNegativeHalfCenter )
-		self.negativeAxisLineZ = tableau.ColoredLine( Vector3(), 'skyblue', None, Vector3( 0.0, 0.0, negativeHalfCenter ), 'Z Negative Axis: Origin -> 0,0,%s' % roundedNegativeHalfCenter )
-		self.positiveAxisLineX = tableau.ColoredLine( Vector3(), 'darkorange', None, Vector3( halfCenter ), 'X Positive Axis: Origin -> %s,0,0' % roundedHalfCenter )
-		self.positiveAxisLineY = tableau.ColoredLine( Vector3(), 'gold', None, Vector3( 0.0, halfCenter ), 'Y Positive Axis: Origin -> 0,%s,0' % roundedHalfCenter )
-		self.positiveAxisLineZ = tableau.ColoredLine( Vector3(), 'skyblue', None, Vector3( 0.0, 0.0, halfCenter ), 'Z Positive Axis: Origin -> 0,0,%s' % roundedHalfCenter )
+		self.negativeAxisLineX = tableau.ColoredLine(
+			Vector3(),
+			'darkorange',
+			None,
+			Vector3(negativeHalfCenter),
+			f'X Negative Axis: Origin -> {roundedNegativeHalfCenter},0,0',
+		)
+		self.negativeAxisLineY = tableau.ColoredLine(
+			Vector3(),
+			'gold',
+			None,
+			Vector3(0.0, negativeHalfCenter),
+			f'Y Negative Axis: Origin -> 0,{roundedNegativeHalfCenter},0',
+		)
+		self.negativeAxisLineZ = tableau.ColoredLine(
+			Vector3(),
+			'skyblue',
+			None,
+			Vector3(0.0, 0.0, negativeHalfCenter),
+			f'Z Negative Axis: Origin -> 0,0,{roundedNegativeHalfCenter}',
+		)
+		self.positiveAxisLineX = tableau.ColoredLine(
+			Vector3(),
+			'darkorange',
+			None,
+			Vector3(halfCenter),
+			f'X Positive Axis: Origin -> {roundedHalfCenter},0,0',
+		)
+		self.positiveAxisLineY = tableau.ColoredLine(
+			Vector3(),
+			'gold',
+			None,
+			Vector3(0.0, halfCenter),
+			f'Y Positive Axis: Origin -> 0,{roundedHalfCenter},0',
+		)
+		self.positiveAxisLineZ = tableau.ColoredLine(
+			Vector3(),
+			'skyblue',
+			None,
+			Vector3(0.0, 0.0, halfCenter),
+			f'Z Positive Axis: Origin -> 0,0,{roundedHalfCenter}',
+		)
 		self.repository.axisRulings.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.repository.bandHeight.setUpdateFunction( self.setWindowToDisplaySavePhoenixUpdate )
 		self.repository.bottomBandBrightness.setUpdateFunction( self.setWindowToDisplaySavePhoenixUpdate )
@@ -807,10 +845,16 @@ class SkeinWindow( tableau.TableauWindow ):
 		"Draw colored lines."
 		if width <= 0:
 			return
-		drawnColoredLines = []
-		for coloredLine in coloredLines:
-			drawnColoredLines.append( self.getDrawnColoredLine( self.arrowType, coloredLine, projectiveSpace, coloredLine.tagString, width ) )
-		return drawnColoredLines
+		return [
+			self.getDrawnColoredLine(
+				self.arrowType,
+				coloredLine,
+				projectiveSpace,
+				coloredLine.tagString,
+				width,
+			)
+			for coloredLine in coloredLines
+		]
 
 	def getDrawnColoredLineWithoutArrow( self, coloredLine, projectiveSpace, tags, width ):
 		"Draw colored line without an arrow."
@@ -841,7 +885,9 @@ class SkeinWindow( tableau.TableauWindow ):
 	def printHexadecimalColorName(self, name):
 		"Print the color name in hexadecimal."
 		colorTuple = self.canvas.winfo_rgb( name )
-		print('#%s%s%s' % ( settings.getWidthHex( colorTuple[0], 2 ), settings.getWidthHex( colorTuple[1], 2 ), settings.getWidthHex( colorTuple[2], 2 ) ) )
+		print(
+			f'#{settings.getWidthHex(colorTuple[0], 2)}{settings.getWidthHex(colorTuple[1], 2)}{settings.getWidthHex(colorTuple[2], 2)}'
+		)
 
 	def update(self):
 		"Update the screen."

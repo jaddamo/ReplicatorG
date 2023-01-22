@@ -42,12 +42,12 @@ class ListAttribute:
 
 	def delete(self, arguments):
 		'Get the delete list.'
-		deleteList = []
 		enumeratorSet = set(euclidean.getEnumeratorKeysAlwaysList(self.listObject, arguments))
-		for elementIndex, element in enumerate(self.listObject):
-			if elementIndex not in enumeratorSet:
-				deleteList.append(element)
-		return deleteList
+		return [
+			element
+			for elementIndex, element in enumerate(self.listObject)
+			if elementIndex not in enumeratorSet
+		]
 
 	def get(self, itemIndex):
 		'Get value by index'
@@ -59,7 +59,7 @@ class ListAttribute:
 
 	def getIsNotIn(self, value):
 		'Determine if the value is in.'
-		return not(value in self.listObject)
+		return value not in self.listObject
 
 	def getLength(self):
 		'Get the length.'
@@ -93,7 +93,9 @@ class ListAttribute:
 		for elementIndex, element in enumerate(self.listObject):
 			if element == value:
 				return elementIndex
-		raise ValueError('Value (%s) not found in rindex in ListAttribute for (%s).' % (value, self.listObject))
+		raise ValueError(
+			f'Value ({value}) not found in rindex in ListAttribute for ({self.listObject}).'
+		)
 
 	def set(self, itemIndex, value):
 		'Set value.'

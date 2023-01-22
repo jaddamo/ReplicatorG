@@ -83,11 +83,13 @@ def getCraftedTextFromText( gcodeText, clipRepository = None ):
 	"Clip a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'clip'):
 		return gcodeText
-	if clipRepository == None:
+	if clipRepository is None:
 		clipRepository = settings.getReadRepository( ClipRepository() )
-	if not clipRepository.activateClip.value:
-		return gcodeText
-	return ClipSkein().getCraftedGcode( clipRepository, gcodeText )
+	return (
+		ClipSkein().getCraftedGcode(clipRepository, gcodeText)
+		if clipRepository.activateClip.value
+		else gcodeText
+	)
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -166,7 +168,7 @@ class ClipSkein:
 			self.loopPath.path = euclidean.getClippedLoopPath( self.clipLength, self.loopPath.path )
 			self.loopPath.path = euclidean.getSimplifiedPath( self.loopPath.path, self.perimeterWidth )
 			euclidean.addLoopToPixelTable( self.loopPath.path, self.layerPixelTable, self.layerPixelWidth )
-		if self.oldWiddershins == None:
+		if self.oldWiddershins is None:
 			self.addGcodeFromThreadZ( self.loopPath.path, self.loopPath.z )
 		else:
 			if self.oldWiddershins != euclidean.isWiddershins( self.loopPath.path ):
@@ -229,7 +231,7 @@ class ClipSkein:
 
 	def getNextThreadIsACloseLoop( self, path ):
 		"Determine if the next thread is a loop."
-		if self.oldLocation == None:
+		if self.oldLocation is None:
 			return False
 		isLoop = False
 		location = self.oldLocation
@@ -237,7 +239,7 @@ class ClipSkein:
 			line = self.lines[ afterIndex ]
 			splitLine = gcodec.getSplitLineBeforeBracketSemicolon(line)
 			firstWord = gcodec.getFirstWord(splitLine)
-			if firstWord == '(<loop>' or firstWord == '(<perimeter>':
+			if firstWord in ['(<loop>', '(<perimeter>']:
 				isLoop = True
 			elif firstWord == 'G1':
 				location = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
@@ -255,7 +257,7 @@ class ClipSkein:
 			line = self.lines[ afterIndex ]
 			splitLine = gcodec.getSplitLineBeforeBracketSemicolon(line)
 			firstWord = gcodec.getFirstWord(splitLine)
-			if firstWord == 'G1' or firstWord == 'M103':
+			if firstWord in ['G1', 'M103']:
 				return False
 			elif firstWord == 'M101':
 				return True
@@ -265,10 +267,9 @@ class ClipSkein:
 		"Add to loop path if this is a loop or path."
 		location = gcodec.getLocationFromSplitLine(self.oldLocation, splitLine)
 		self.feedRateMinute = gcodec.getFeedRateMinute( self.feedRateMinute, splitLine )
-		if self.isLoopPerimeter:
-			if self.isNextExtruderOn():
-				self.loopPath = euclidean.PathZ(location.z)
-		if self.loopPath == None:
+		if self.isLoopPerimeter and self.isNextExtruderOn():
+			self.loopPath = euclidean.PathZ(location.z)
+		if self.loopPath is None:
 			if self.extruderActive:
 				self.oldWiddershins = None
 		else:
@@ -302,7 +303,9 @@ class ClipSkein:
 		if len(splitLine) < 1:
 			return
 		firstWord = splitLine[0]
-		if firstWord == 'G1':
+		if firstWord == '(<layer>':
+			self.setLayerPixelTable()
+		elif firstWord == 'G1':
 			self.linearMove(splitLine)
 		elif firstWord == 'M101':
 			self.extruderActive = True
@@ -312,11 +315,9 @@ class ClipSkein:
 			if self.loopPath != None:
 				self.addTailoredLoopPath(line)
 				return
-		elif firstWord == '(<layer>':
-			self.setLayerPixelTable()
-		if firstWord == '(<loop>' or firstWord == '(<perimeter>':
+		if firstWord in ['(<loop>', '(<perimeter>']:
 			self.isLoopPerimeter = True
-		if self.loopPath == None:
+		if self.loopPath is None:
 			self.distanceFeedRate.addLine(line)
 
 	def setLayerPixelTable(self):
@@ -351,7 +352,7 @@ class ClipSkein:
 			elif firstWord == '(</boundaryPerimeter>)':
 				boundaryLoop = None
 			elif firstWord == '(<boundaryPoint>':
-				if boundaryLoop == None:
+				if boundaryLoop is None:
 					boundaryLoop = []
 					self.boundaryLoops.append( boundaryLoop )
 				location = gcodec.getLocationFromSplitLine(None, splitLine)

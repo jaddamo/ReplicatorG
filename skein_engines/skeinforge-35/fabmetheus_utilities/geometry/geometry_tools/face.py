@@ -39,7 +39,10 @@ def addGeometryList( faces, xmlElement ):
 def getCommonVertexIndex( edgeFirst, edgeSecond ):
 	"Get the vertex index that both edges have in common."
 	for edgeFirstVertexIndex in edgeFirst.vertexIndexes:
-		if edgeFirstVertexIndex == edgeSecond.vertexIndexes[0] or edgeFirstVertexIndex == edgeSecond.vertexIndexes[1]:
+		if edgeFirstVertexIndex in [
+			edgeSecond.vertexIndexes[0],
+			edgeSecond.vertexIndexes[1],
+		]:
 			return edgeFirstVertexIndex
 	print( "Inconsistent GNU Triangulated Surface" )
 	print( edgeFirst )
@@ -51,7 +54,9 @@ def processXMLElement(xmlElement):
 	face = Face()
 	face.index = len( xmlElement.parent.object.faces )
 	for vertexIndexIndex in xrange( 3 ):
-		face.vertexIndexes.append( evaluate.getEvaluatedInt('vertex' + str(vertexIndexIndex), xmlElement ) )
+		face.vertexIndexes.append(
+			evaluate.getEvaluatedInt(f'vertex{str(vertexIndexIndex)}', xmlElement)
+		)
 	xmlElement.parent.object.faces.append( face )
 
 
@@ -66,7 +71,7 @@ class Edge:
 	
 	def __repr__(self):
 		"Get the string representation of this Edge."
-		return str( self.index ) + ' ' + str( self.faceIndexes ) + ' ' + str(self.vertexIndexes)
+		return f'{str(self.index)} {str(self.faceIndexes)} {str(self.vertexIndexes)}'
 
 	def addFaceIndex( self, faceIndex ):
 		"Add first None face index to input face index."
@@ -98,7 +103,7 @@ class Face:
 		"Add to the attribute dictionary."
 		for vertexIndexIndex in xrange(len(self.vertexIndexes)):
 			vertexIndex = self.vertexIndexes[vertexIndexIndex]
-			attributeDictionary['vertex' + str(vertexIndexIndex)] = str(vertexIndex)
+			attributeDictionary[f'vertex{str(vertexIndexIndex)}'] = str(vertexIndex)
 
 	def addXML(self, depth, output):
 		"Add the xml for this object."

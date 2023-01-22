@@ -27,7 +27,9 @@ def getManipulatedPaths(close, loop, prefix, sideLength, xmlElement):
 	"Get path with overhangs removed or filled in."
 	if len(loop) < 2:
 		return [loop]
-	isClosed = evaluate.getEvaluatedBooleanDefault(False, prefix + 'closed', xmlElement)
+	isClosed = evaluate.getEvaluatedBooleanDefault(
+		False, f'{prefix}closed', xmlElement
+	)
 	radius = lineation.getStrokeRadiusByPrefix(prefix, xmlElement )
 	loopComplex = euclidean.getComplexPath(loop)
 	if isClosed:

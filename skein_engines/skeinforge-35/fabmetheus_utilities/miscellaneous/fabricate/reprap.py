@@ -140,8 +140,7 @@ class extruderClass:
 			p = snap.SNAPPacket( serialPort, self.address, snap.localAddress, 0, 1, [CMD_GETMODULETYPE] )	# Create SNAP packet requesting module type
 			if p.send():
 				rep = p.getReply()
-				data = checkReplyPacket( rep, 2, CMD_GETMODULETYPE )						# If packet sent ok and was acknoledged then await reply, otherwise return False
-				if data:
+				if data := checkReplyPacket(rep, 2, CMD_GETMODULETYPE):
 					return data[1]								# If valid reply is recieved then return it, otherwise return False
 		return False
 
@@ -150,8 +149,7 @@ class extruderClass:
 			p = snap.SNAPPacket( serialPort, self.address, snap.localAddress, 0, 1, [CMD_VERSION] )
 			if p.send():
 				rep = p.getReply()
-				data = checkReplyPacket( rep, 3, CMD_VERSION )
-				if data:
+				if data := checkReplyPacket(rep, 3, CMD_VERSION):
 					return data[1], data[2]
 		return False
 
@@ -163,12 +161,11 @@ class extruderClass:
 		return False
 
 	def getTemp(self):
-		if self.active:		
+		if self.active:	
 			p = snap.SNAPPacket( serialPort, self.address, snap.localAddress, 0, 1, [CMD_GETTEMP] )
 			if p.send():
 				rep = p.getReply()
-				data = checkReplyPacket( rep, 2, CMD_GETTEMP )
-				if data:
+				if data := checkReplyPacket(rep, 2, CMD_GETTEMP):
 					return data[1]
 		return False
 
@@ -205,11 +202,13 @@ class extruderClass:
 extruder = extruderClass()
 
 
-def checkReplyPacket (packet, numExpectedBytes, command):
-	if packet:
-		if len( packet.dataBytes ) == numExpectedBytes:		# check correct number of data bytes have been recieved
-			if packet.dataBytes[0] == command:			# check reply is a reply to sent command
-				return packet.dataBytes
+def checkReplyPacket(packet, numExpectedBytes, command):
+	if (
+		packet
+		and len(packet.dataBytes) == numExpectedBytes
+		and packet.dataBytes[0] == command
+	):
+		return packet.dataBytes
 	return False
 				
 
@@ -267,10 +266,8 @@ class axisClass:
 			p = snap.SNAPPacket( serialPort, self.address, snap.localAddress, 0, 1, [CMD_GETPOS] )
 			if p.send():
 				rep = p.getReply()
-				data = checkReplyPacket( rep, 3, CMD_GETPOS )
-				if data:
-					pos = bytes2int( data[1], data[2] )
-					return pos 						# return value
+				if data := checkReplyPacket(rep, 3, CMD_GETPOS):
+					return bytes2int( data[1], data[2] )
 		return False
 
 	#set current position (set variable not robot position)
@@ -346,10 +343,10 @@ class axisClass:
 			if p.send():
 				if waitArrival:
 					notif = getNotification( serialPort )
+					if notif.dataBytes[0] != CMD_DDA:
+						return False
 					if notif.dataBytes[0] == CMD_DDA:
 						if printDebug: print "    valid notification for DDA"	# todo: add actual enforement on wrong notification
-					else:
-						return False
 				return True
 		return False
 	
@@ -367,10 +364,7 @@ class syncAxis:
 		self.delta = delta
 		self.direction = direction
 
-		if self.direction > 0:
-			self.syncMode = sync_inc
-		else:
-			self.syncMode = sync_dec
+		self.syncMode = sync_inc if self.direction > 0 else sync_dec
 
 
 class cartesianClass:
